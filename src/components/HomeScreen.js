@@ -52,9 +52,9 @@ import { Text,
  } from 'react-native'
 import React, { useState } from 'react'
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-
-const HomeScreeno = ({ navigation }) => {
-const [activeTab, setActiveTab] = useState("Places");
+import { fonts } from '../../assets/styles/font';
+const HomeScreen = ({ navigation }) => {
+const [activeTab, setActiveTab] = useState("Lieux");
 const [favorites, setFavorites] = useState([]);
 
 const toggleFavorite = (title) => {
@@ -66,118 +66,114 @@ const toggleFavorite = (title) => {
 };
 const popularPlaces = [
   {
-    title: "Litchina",
+    title: "Limona",
     rating: 4.2,
-    image: require("../assets/litch.jpg"),
+    image: require("../../assets/images/litch.jpg"),
   },
   {
     title: "La Grotte du Chameau",
-    rating: 4.2,
-    image: require("../assets/Grottechameau.jpg"),
+    rating: 4.3,
+    image: require("../../assets/images/Grottechameau.jpg"),
+  },
+  {
+    title: "Grotte des Pigeons",
+    rating: 4.8,
+    image: require("../../assets/images/GrottedesPigeons(Tafoughalt).jpg"),
+  },
+  {
+    title: "Parc des Béni Snassen",
+    rating: 4.7,
+    image: require("../../assets/images/parcBeniSnassen.jpg"),
   },
 ];
 const recommendedPlaces = [
   {
     title: "Cap de l’Eau",
-    image: require("../assets/raslma.jpg"),
+    image: require("../../assets/images/raslma.jpg"),
   },
   {
-    title: "Plage de Marsa Ben M’Hidi",
-    image: require("../assets/BenMhedi.jpg"),
+    title: "Marina Saïdia",
+    image: require("../../assets/images/marinaSaidia.jpg"),
   },
 ];
   return (
     <ScrollView style={styles.container}>
-    <View style={styles.header}>
-      <Text style={styles.title}>Explore</Text>
-      <Text style={styles.titleBerkane}>Berkane</Text>
-      {/* <View style={styles.locationContainer}>
-        <Ionicons name="location-sharp" size={14} color="orange" />
-        <Text style={styles.locationText}>Berkane</Text>
-      </View> */}
-    </View>
+      <View style={styles.header}>
+        <Text style={styles.title}>Explore</Text>
+        <Text style={styles.titleBerkane}>Berkane</Text>
+      </View>
 
-    <View style={styles.searchBar}>
-      <Ionicons name="search" size={20} color="#aaa" />
-      <TextInput placeholder="Search" style={styles.searchInput} />
-    </View>
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={20} color="#aaa" />
+        <TextInput placeholder="Rechercher" style={styles.searchInput} />
+      </View>
 
-    {/* 🔘 BOUTON "Voir la carte" */}
-    <TouchableOpacity
-      style={styles.mapButton}
-      onPress={() => navigation.navigate("MapScreen")}
-    >
-      <Ionicons name="map" size={24} color="white" />
-      <Text style={styles.mapButtonText}>Voir la carte</Text>
-    </TouchableOpacity>
+      <View style={styles.tabs}>
+        {["Lieux", "Hôtels", "Restaurants"].map((tab) => (
+          <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}>
+            <Text style={[styles.tab, activeTab === tab && styles.activeTab]}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-    <View style={styles.tabs}>
-      {["Places", "Hotels", "Food"].map((tab) => (
-        <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}>
-          <Text style={[styles.tab, activeTab === tab && styles.activeTab]}>
-            {tab}
-          </Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Populaires</Text>
+        <TouchableOpacity>
+          <Text style={styles.seeAll}>Voir tout</Text>
         </TouchableOpacity>
-      ))}
-    </View>
+      </View>
 
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Popular</Text>
-      <TouchableOpacity>
-        <Text style={styles.seeAll}>See all</Text>
-      </TouchableOpacity>
-    </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {popularPlaces.map((item, index) => {
+          const isFavorite = favorites.includes(item.title);
+          return (
+            <TouchableOpacity
+              key={index}
+              style={styles.card}
+              activeOpacity= {0.8}
+              // onPress={() => navigation.navigate("DetailsScreen", { place: item }) }
+            >
+              <Image source={item.image} style={styles.cardImage} />
+              <View style={styles.cardOverlay}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <View style={styles.rating}>
+                  <Ionicons name="star" size={14} color="gold" />
+                  <Text style={styles.ratingText}>{item.rating}</Text>
+                </View>
+                <MaterialIcons
+                  name={isFavorite ? "favorite" : "favorite-border"}
+                  size={30}
+                  color="white"
+                  style={styles.favoriteIcon}
+                  onPress={() => toggleFavorite(item.title)}
+                />
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      {popularPlaces.map((item, index) => {
-        const isFavorite = favorites.includes(item.title);
-
-        return (
+      <Text style={styles.sectionTitle}>Recommandés</Text>
+      <View style={styles.recommendedContainer}>
+        {recommendedPlaces.map((item, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.card}
-            onPress={() =>
-              navigation.navigate("DetailsScreen", { place: item })
-            }
+            style={styles.recommendedCard}
+            activeOpacity= {0.8}
+            // onPress={() => navigation.navigate("DetailsScreen", { place: item })}
           >
-            <Image source={item.image} style={styles.cardImage} />
-            <View style={styles.cardOverlay}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <View style={styles.rating}>
-                <Ionicons name="star" size={14} color="gold" />
-                <Text style={styles.ratingText}>{item.rating}</Text>
-              </View>
-              <MaterialIcons
-                name={isFavorite ? "favorite" : "favorite-border"}
-                size={20}
-                color="white"
-                style={styles.favoriteIcon}
-                onPress={() => toggleFavorite(item.title)}
-              />
-            </View>
+            <Image source={item.image} style={styles.recommendedImage} />
+            <Text style={styles.recomendedTitle}>{item.title}</Text>
           </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
-
-    <Text style={styles.sectionTitle}>Recommended</Text>
-    <View style={styles.recommendedContainer}>
-      {recommendedPlaces.map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.recommendedCard}
-          onPress={() => navigation.navigate("DetailsScreen", { place: item })}
-        >
-          <Image source={item.image} style={styles.recommendedImage} />
-          <Text style={styles.cardTitle}>{item.title}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+        ))}
+      </View>
   </ScrollView>
   )
 }
 
-export default HomeScreeno;
+export default HomeScreen;
 
 const styles = StyleSheet.create({
 container: {
@@ -186,53 +182,32 @@ container: {
   flex: 1,
 },
 header: {
-  marginTop : 47
+  marginTop : 30
 },
 title: {
   fontSize: 18,
-  fontFamily : "arial"
-
+  fontFamily: fonts.regular
 },
 titleBerkane: {
   fontSize: 32,
-  fontWeight: "bold",
+  fontFamily : fonts.medium
 },
-// locationContainer: {
-//   flexDirection: "row",
-//   alignItems: "center",
-// },
-locationText: {
-  marginLeft: 4,
-  color: "orange",
-  fontWeight: "600",
-},
+
+
 searchBar: {
   flexDirection: "row",
   alignItems: "center",
-  backgroundColor: "#f1f1f1",
-  borderRadius: 12,
+  backgroundColor: "#f9f9f9",
+  borderRadius: 18,
   paddingHorizontal: 10,
-  marginVertical: 15,
-  height: 45,
+  marginTop: 15,
+  marginBottom : 30,
+  height: 56,
 },
 searchInput: {
-  marginLeft: 10,
+  marginLeft: 5,
   fontSize: 16,
   flex: 1,
-},
-mapButton: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "center",
-  backgroundColor: "orange",
-  padding: 10,
-  borderRadius: 10,
-  marginBottom: 10,
-},
-mapButtonText: {
-  color: "white",
-  marginLeft: 8,
-  fontWeight: "bold",
 },
 tabs: {
   flexDirection: "row",
@@ -241,34 +216,35 @@ tabs: {
 tab: {
   marginRight: 20,
   fontSize: 16,
+  fontFamily : fonts.regular,
   color: "#888",
 },
 activeTab: {
   color: "orange",
-  fontWeight: "bold",
+  fontFamily : fonts.bold,
 },
 section: {
   flexDirection: "row",
   justifyContent: "space-between",
   alignItems: "center",
-  marginTop: 15,
-  marginBottom: 10,
+  marginVertical : 12
 },
 sectionTitle: {
   fontSize: 18,
-  fontWeight: "bold",
+  fontFamily: fonts.semibold
 },
 seeAll: {
   color: "orange",
-  fontSize: 14,
+  fontFamily: fonts.medium
 },
 card: {
-  width: 160,
-  height: 200,
+  width: 191,
+  height: 238,
   borderRadius: 16,
   marginRight: 15,
   overflow: "hidden",
   position: "relative",
+  marginBottom: 20
 },
 cardImage: {
   width: "100%",
@@ -283,7 +259,7 @@ cardOverlay: {
 },
 cardTitle: {
   color: "white",
-  fontWeight: "bold",
+  fontFamily: fonts.semibold
 },
 rating: {
   flexDirection: "row",
@@ -296,13 +272,14 @@ ratingText: {
 },
 favoriteIcon: {
   position: "absolute",
-  top: 10,
-  right: 10,
+  right: 5,
+  bottom : 12
 },
 recommendedContainer: {
   flexDirection: "row",
   justifyContent: "space-between",
   marginTop: 10,
+  marginBottom: 30
 },
 recommendedCard: {
   width: "48%",
@@ -311,6 +288,9 @@ recommendedImage: {
   width: "100%",
   height: 120,
   borderRadius: 12,
-  marginBottom: 5,
+  marginBottom: 5
 },
+recomendedTitle : {
+  fontFamily: fonts.medium,
+}
 });

@@ -7,8 +7,7 @@ export default function Splash({ navigation }) {
       const token = await AsyncStorage.getItem("token");
       setTimeout(() => {
         if (token) {
-          navigation.replace("HomeScreen");
-           
+          navigation.replace("MainTabs");   
         } else {
           navigation.replace("SignIn"); 
         }
