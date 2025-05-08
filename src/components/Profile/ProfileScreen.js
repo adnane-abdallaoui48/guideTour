@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, Image, Modal, Pressable, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import Cards from './Cards/Cards'
+import { fonts } from '../../../assets/styles/font';
 const ProfileScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [notifStatus, setNotifStatus] = useState("Allow");
@@ -60,11 +61,12 @@ const styles = StyleSheet.create({
     },
    titleName: {
         fontSize: 20,
-        fontWeight: 400,
+        fontFamily: fonts.semibold,
         color: "#1F2937",
     },
     titleEmail : {
-        color: "#6B7280"
+        color: "#6B7280",
+        fontFamily: fonts.regular
     },
     compteImage : {
         width: 70,

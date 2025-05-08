@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import React from 'react'
 import DynamicIcon from './DynamicIcon'
+import { fonts } from '../../../../assets/styles/font'
 export default function Cards({name, iconName, iconLibrary, onPress}) {
   return (
     <View style={styles.container}>
@@ -33,7 +34,8 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 18,
-        fontWeight: 'medium',
+        fontFamily : fonts.medium,
         marginLeft: 30,
+
     },
 })

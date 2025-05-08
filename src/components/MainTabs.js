@@ -4,7 +4,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from './HomeScreen';
 import ProfileScreen from './Profile/ProfileScreen';
 import FavoritesScreen from './FavoritesScreen';
-
+import Colors from "./../constants/colors"
+import { fonts } from '../../assets/styles/font';
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
@@ -19,8 +20,12 @@ export default function MainTabs() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#FF6F00',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.secondary,
+        tabBarLabelStyle: {
+          fontFamily: fonts.regular,
+          fontSize: 11,
+        },
         headerShown: false,
       })}
     >
