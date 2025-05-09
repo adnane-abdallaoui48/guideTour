@@ -1,47 +1,4 @@
-// import React, {useState, useEffect} from 'react';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import LogOut from './LogOut';
-
-// export default function HomeScreen() {
-//   const [user, setUser] = useState(null);
-//   const token = AsyncStorage.getItem("token");
-//   // useEffect(() => {s
-//   //   const fetchUser = async () => {
-//   //     const token = await AsyncStorage.getItem("token");
-//   //     if (!token) return;
-
-//   //     try {
-//   //       const response = await fetch(" https://17c6-41-248-88-254.ngrok-free.app/users/me", {
-//   //         headers: {
-//   //           Authorization: `Bearer ${token}`
-//   //         }
-//   //       });
-//   //       const data = await response.json();
-//   //       setUser(data);
-//   //     } catch (error) {
-//   //       console.error("Erreur lors de la récupération du profil", error);
-//   //     }
-//   //   };
-
-//   //   fetchUser();
-//   // }, []);
-
-//   return (
-//     <View>
-//       <Text>Accueil</Text>
-//        <View>
-//           {/* {user ? (
-//             <Text>Bienvenue {user.firstName} {user.lastName}</Text>
-//           ) : (
-//             <Text>Chargement...</Text>
-//           )} */}
-//           <LogOut />
-//       </View>
-//     </View>
-//   );
-// }
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect} from 'react';
 import {
   Text,
   View,
@@ -59,7 +16,12 @@ import Colors from './../constants/colors';
 const HomeScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Lieux');
   const [favorites, setFavorites] = useState([]);
-
+  const scrollRef = useRef(null);
+  const [searchPlaces, setSearchPlaces] = useState({
+    Lieux: '',
+    Hôtels: '',
+    Restaurants: '',
+  });
   const toggleFavorite = (title) => {
     if (favorites.includes(title)) {
       setFavorites(favorites.filter((fav) => fav !== title));
@@ -68,27 +30,83 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  const handleTabChange = (tab) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      scrollRef.current?.scrollTo({ x: 0, animated: true });
+    }
+  };
+
+
+const fetchData = async (category, token) => {
+  try {
+    const response = await fetch(`https://tonapi.com/api/places?category=${category}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, 
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des données');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erreur fetchData:', error.message);
+    return [];
+  }
+};
+useEffect(() => {
+  const loadPlaces = async () => {
+    const token = AsyncStorage.getItem('token');
+    const data = await fetchData(activeTab, token);
+    setPlaces(data); 
+  };
+
+  loadPlaces();
+}, [activeTab]);
+
   const popularPlaces = [
     {
       title: 'Limona',
       rating: 4.2,
       image: require('../../assets/images/litch.jpg'),
+      category: "Lieux"
     },
     {
       title: 'La Grotte du Chameau',
       rating: 4.3,
       image: require('../../assets/images/Grottechameau.jpg'),
+      category: "Lieux"
     },
     {
       title: 'Grotte des Pigeons',
       rating: 4.8,
       image: require('../../assets/images/GrottedesPigeons(Tafoughalt).jpg'),
+      category: "Lieux"
     },
     {
       title: 'Parc des Béni Snassen',
       rating: 4.7,
       image: require('../../assets/images/parcBeniSnassen.jpg'),
+      category: "Lieux"
     },
+    {
+      title: 'Raid Oriental',
+      rating: 4.3,
+      image: require('../../assets/images/RaidOriental.png'),
+      category: "Hôtels"
+    },
+    {
+      title: 'Be Live Collection',
+      rating: 5,
+      image: require('../../assets/images/beInLiveSaidia.jpg'),
+      category: "Hôtels"
+    },
+    
   ];
 
   const recommendedPlaces = [
@@ -102,6 +120,10 @@ const HomeScreen = ({ navigation }) => {
     },
   ];
 
+
+  const filterPlacesCategory = popularPlaces.filter(place =>
+      place.category === activeTab && place.title.toLowerCase().includes(searchPlaces[activeTab].toLowerCase())
+  );
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -112,12 +134,14 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#aaa" />
-          <TextInput placeholder="Rechercher" style={styles.searchInput} />
+          <TextInput placeholder="Rechercher" style={styles.searchInput} onChangeText={(text) =>
+            setSearchPlaces((prev) => ({ ...prev, [activeTab]: text }))
+          }/>
         </View>
 
         <View style={styles.tabs}>
           {['Lieux', 'Hôtels', 'Restaurants'].map((tab) => (
-            <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}>
+            <TouchableOpacity key={tab} onPress={() => handleTabChange(tab)}>
               <Text style={[styles.tab, activeTab === tab && styles.activeTab]}>{tab}</Text>
             </TouchableOpacity>
           ))}
@@ -130,9 +154,10 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {popularPlaces.map((item, index) => {
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} ref={scrollRef}>
+          {filterPlacesCategory.map((item, index) => {
             const isFavorite = favorites.includes(item.title);
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
             return (
               <TouchableOpacity
                 key={index}
