@@ -10,3 +10,4 @@ const ProfileDetailsScreen = () => {
 }
 
 export default ProfileDetailsScreen
+

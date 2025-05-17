@@ -1,8 +1,15 @@
 import { View, Text, StyleSheet, ScrollView, Image, Modal, Pressable, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Cards from './Cards/Cards'
 import { fonts } from '../../../assets/styles/font';
+import { useNavigation } from '@react-navigation/native';
+import { handleLogout } from '../LogOut';
+
+
+
 const ProfileScreen = () => {
+  
+    const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [notifStatus, setNotifStatus] = useState("Allow");
   return (
@@ -22,7 +29,10 @@ const ProfileScreen = () => {
             <TouchableOpacity onPress={() => setModalVisible(true)}>
                 <Cards iconLibrary="Ionicons" iconName="notifications-outline" name={`Notification (${notifStatus})`} />
             </TouchableOpacity>
-            <Cards iconLibrary="AntDesign" iconName="logout" name="Déconnexion" />
+
+            <TouchableOpacity onPress={() => handleLogout(navigation)}>
+              <Cards iconLibrary="AntDesign" iconName="logout" name="Déconnexion" />
+            </TouchableOpacity>
         </View>
         <Modal
         transparent

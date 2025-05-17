@@ -8,6 +8,7 @@ import SignUp from './src/components/SignUp';
 import Splash from './src/components/Splach';
 import Toast from 'react-native-toast-message';
 import MainTabs from './src/components/MainTabs';
+import DestinationDetail from './src/components/DestinationDetail';
 
 const Stack = createNativeStackNavigator();
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={Splash} />
+        <Stack.Screen name="DestinationDetail" component={DestinationDetail} />
         <Stack.Screen name="SignIn" component={SignIn} />
         <Stack.Screen name="SignUp" component={SignUp} />
         <Stack.Screen name="MainTabs" component={MainTabs} />

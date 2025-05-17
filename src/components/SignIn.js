@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView} from "react-native";
 import { Ionicons } from "@expo/vector-icons";  
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,7 +20,7 @@ export default function SignIn({ navigation }) {
     }
 
     try {
-      const response = await fetch("http://localhost:8083/users/login", {
+      const response = await fetch("https://1601-196-81-34-139.ngrok-free.app/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,7 +34,8 @@ export default function SignIn({ navigation }) {
         const { token } = data;
         console.log(data);
         await AsyncStorage.setItem("token", token);
-        navigation.navigate("HomeScreen"); 
+        navigation.navigate('MainTabs', { screen: 'Accueil' });
+        
       } else {
         setErrors([data.message || "Email ou mot de passe incorrect."]);
       }

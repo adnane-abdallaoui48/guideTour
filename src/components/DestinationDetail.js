@@ -1,14 +1,30 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 
-export default function DetailsScreen() {
+export default function DestinationDetail({route}) {
+  const { lieu } = route.params;
+
   return (
-    <View>
-      <Text>Écran Détails</Text>
+    <View style={styles.container}>
+      <Image source={{ uri: lieu.imageUrl }} style={styles.image} />
+      <Text style={styles.title}>{lieu.name}</Text>
+      <Text>{lieu.description}</Text>
     </View>
   );
-}
-
+};
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+  },
+  image: {
+    height: 200,
+    width: '100%',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+});
 // import React, {useState, useEffect} from 'react';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 

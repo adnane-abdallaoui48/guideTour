@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect} from 'react';
+import { useState, useRef, useEffect} from 'react';
 import {
   Text,
   View,
@@ -8,20 +8,25 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
+import images from "./../Images";
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fonts } from '../../assets/styles/font';
 import Colors from './../constants/colors';
-
-const HomeScreen = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState('Lieux');
+import { useNavigation } from '@react-navigation/native';
+const HomeScreen = () => {
+  const navigation = useNavigation();
+  const [activeTab, setActiveTab] = useState('Tourism');
   const [favorites, setFavorites] = useState([]);
   const scrollRef = useRef(null);
   const [searchPlaces, setSearchPlaces] = useState({
-    Lieux: '',
-    Hôtels: '',
-    Restaurants: '',
-  });
+    Tourism: '',
+    Hotel: '',
+    Restaurant: '',
+  }
+  );
+
+  const [lieux, setLieux] = useState([]); 
   const toggleFavorite = (title) => {
     if (favorites.includes(title)) {
       setFavorites(favorites.filter((fav) => fav !== title));
@@ -37,77 +42,26 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+ 
 
-const fetchData = async (category, token) => {
-  try {
-    const response = await fetch(`https://tonapi.com/api/places?category=${category}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, 
-      },
-    });
+  useEffect(() => {
+    const fetchLieux = async () => {
+      try {
+        const response = await fetch('https://1601-196-81-34-139.ngrok-free.app/places'); 
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP : ${response.status}`);
+        }
+        const data = await response.json();
+        setLieux(data); 
+      } catch (err) {
+        console.log(err)
+      } 
+    };
 
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des données');
-    }
+    fetchLieux(); 
+  }, []); 
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erreur fetchData:', error.message);
-    return [];
-  }
-};
-useEffect(() => {
-  const loadPlaces = async () => {
-    const token = AsyncStorage.getItem('token');
-    const data = await fetchData(activeTab, token);
-    setPlaces(data); 
-  };
 
-  loadPlaces();
-}, [activeTab]);
-
-  const popularPlaces = [
-    {
-      title: 'Limona',
-      rating: 4.2,
-      image: require('../../assets/images/litch.jpg'),
-      category: "Lieux"
-    },
-    {
-      title: 'La Grotte du Chameau',
-      rating: 4.3,
-      image: require('../../assets/images/Grottechameau.jpg'),
-      category: "Lieux"
-    },
-    {
-      title: 'Grotte des Pigeons',
-      rating: 4.8,
-      image: require('../../assets/images/GrottedesPigeons(Tafoughalt).jpg'),
-      category: "Lieux"
-    },
-    {
-      title: 'Parc des Béni Snassen',
-      rating: 4.7,
-      image: require('../../assets/images/parcBeniSnassen.jpg'),
-      category: "Lieux"
-    },
-    {
-      title: 'Raid Oriental',
-      rating: 4.3,
-      image: require('../../assets/images/RaidOriental.png'),
-      category: "Hôtels"
-    },
-    {
-      title: 'Be Live Collection',
-      rating: 5,
-      image: require('../../assets/images/beInLiveSaidia.jpg'),
-      category: "Hôtels"
-    },
-    
-  ];
 
   const recommendedPlaces = [
     {
@@ -121,9 +75,11 @@ useEffect(() => {
   ];
 
 
-  const filterPlacesCategory = popularPlaces.filter(place =>
-      place.category === activeTab && place.title.toLowerCase().includes(searchPlaces[activeTab].toLowerCase())
-  );
+ const filterPlacesCategory = lieux.filter((place) =>
+    place.name.toLowerCase().includes(searchPlaces[activeTab]?.toLowerCase()) &&
+    place.category?.toLowerCase() === activeTab.toLowerCase()
+);
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -135,12 +91,12 @@ useEffect(() => {
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#aaa" />
           <TextInput placeholder="Rechercher" style={styles.searchInput} onChangeText={(text) =>
-            setSearchPlaces((prev) => ({ ...prev, [activeTab]: text }))
+                    setSearchPlaces((prev) => ({ ...prev, [activeTab]: text }))
           }/>
         </View>
 
         <View style={styles.tabs}>
-          {['Lieux', 'Hôtels', 'Restaurants'].map((tab) => (
+          {['Tourism', 'Hotel', 'Restaurant'].map((tab) => (
             <TouchableOpacity key={tab} onPress={() => handleTabChange(tab)}>
               <Text style={[styles.tab, activeTab === tab && styles.activeTab]}>{tab}</Text>
             </TouchableOpacity>
@@ -155,29 +111,29 @@ useEffect(() => {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} ref={scrollRef}>
-          {filterPlacesCategory.map((item, index) => {
-            const isFavorite = favorites.includes(item.title);
+             {filterPlacesCategory.map((item, index) => {
+            const isFavorite = favorites.includes(item.name);
             scrollRef.current?.scrollTo({ y: 0, animated: true });
             return (
               <TouchableOpacity
                 key={index}
                 style={styles.card}
                 activeOpacity={0.8}
-                // onPress={() => navigation.navigate("DetailsScreen", { place: item })}
+                onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
               >
-                <Image source={item.image} style={styles.cardImage} />
+                <Image source={images[item.imageUrl]} style={styles.cardImage} />
                 <View style={styles.cardOverlay}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardTitle}>{item.name}</Text>
                   <View style={styles.rating}>
                     <Ionicons name="star" size={14} color="gold" />
-                    <Text style={styles.ratingText}>{item.rating}</Text>
+                    <Text style={styles.ratingText}>5</Text>
                   </View>
                   <MaterialIcons
                     name={isFavorite ? 'favorite' : 'favorite-border'}
                     size={30}
                     color="white"
                     style={styles.favoriteIcon}
-                    onPress={() => toggleFavorite(item.title)}
+                    onPress={() => toggleFavorite(item.name)}
                   />
                 </View>
               </TouchableOpacity>
@@ -192,7 +148,6 @@ useEffect(() => {
               key={index}
               style={styles.recommendedCard}
               activeOpacity={0.8}
-              // onPress={() => navigation.navigate("DetailsScreen", { place: item })}
             >
               <Image source={item.image} style={styles.recommendedImage} />
               <Text style={styles.recomendedTitle}>{item.title}</Text>
