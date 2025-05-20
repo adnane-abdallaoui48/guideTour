@@ -1,17 +1,23 @@
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from './HomeScreen';
 import ProfileScreen from './Profile/ProfileScreen';
-import FavoritesScreen from './FavoritesScreen';
 import Colors from "./../constants/colors"
 import { fonts } from '../../assets/styles/font';
+import FavorisScreen from './FavorisScreen';
+import { TouchableOpacity } from 'react-native';
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        tabBarButton: (props) => (
+        <TouchableOpacity
+        {...props}
+        activeOpacity={0.8} 
+      />
+      ),
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === 'Accueil') iconName = 'home-outline';
@@ -30,7 +36,7 @@ export default function MainTabs() {
       })}
     >
       <Tab.Screen name="Accueil" component={HomeScreen} />
-      <Tab.Screen name="Favoris" component={FavoritesScreen} />
+      <Tab.Screen name="Favoris" component={FavorisScreen} />
       <Tab.Screen name="Profil" component={ProfileScreen} />
     </Tab.Navigator>
   );

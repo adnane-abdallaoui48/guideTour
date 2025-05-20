@@ -1,24 +1,63 @@
 import { View, Text, StyleSheet, ScrollView, Image, Modal, Pressable, TouchableOpacity } from 'react-native'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Cards from './Cards/Cards'
 import { fonts } from '../../../assets/styles/font';
 import { useNavigation } from '@react-navigation/native';
 import { handleLogout } from '../LogOut';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
 const ProfileScreen = () => {
-  
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [notifStatus, setNotifStatus] = useState("Allow");
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');  
+
+        if (!token) {
+          console.log('Token non trouvé');
+          return;
+        }
+
+        const response = await fetch('https://aa2a-160-179-120-241.ngrok-free.app/users/me', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);  
+        } else {
+          const err = await response.json();
+          console.error('Erreur:', err.message);
+        }
+      } catch (error) {
+        console.error('Erreur réseau ou autre:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.compteContainer}>
             <Image source={require('../../../assets/men.jpg')} style={styles.compteImage} />
             <View>
-                <Text style={styles.titleName}>Adnane Abdallaoui</Text>
-                <Text style={styles.titleEmail}>adnane.abdallaoui@ump.ac.ma</Text>
+                {user && (
+  <>
+    <Text style={styles.titleName}>{user.lastName} {user.firstName}</Text>
+    <Text style={styles.titleEmail}>{user.email}</Text>
+        </>
+)}
             </View>  
         </View>
 

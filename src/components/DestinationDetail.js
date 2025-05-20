@@ -1,68 +1,74 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';  // <== important
+import images from "./../Images";
+import { fonts } from '../../assets/styles/font';
+import { useNavigation } from '@react-navigation/native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function DestinationDetail({route}) {
   const { lieu } = route.params;
+  const navigation = useNavigation();
 
   return (
-    <View style={styles.container}>
-      <Image source={{ uri: lieu.imageUrl }} style={styles.image} />
-      <Text style={styles.title}>{lieu.name}</Text>
-      <Text>{lieu.description}</Text>
-    </View>
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.backButton} activeOpacity={0.8} onPress={() => navigation.goBack()}>
+          <MaterialIcons name="arrow-back-ios-new" size={24} color="black" />
+        </TouchableOpacity>
+
+        <Image source={images[lieu.imageUrl]} style={styles.image} />
+
+        <View style={styles.data}>
+          <Text style={styles.titleName}>{lieu.name}</Text>
+          <Text numberOfLines={3} style={styles.description}>
+            Marina Saïdia est un port de plaisance moderne situé sur la côte méditerranéenne 
+            du Maroc. C’est un endroit idéal pour les amateurs de nautisme, avec de nombreuses activités comme la voile, 
+            la plongée et les sports nautiques. La marina offre aussi des services pratiques comme des restaurants, des boutiques,
+            et des espaces de détente. C’est une destination parfaite pour profiter de la mer dans un cadre sécurisé et agréable.
+          </Text>      
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  container : {
+    flex : 1,
+    backgroundColor : '#fff',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 30,    // <-- plus haut pour éviter l'encoche
+    left: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 20,
+    padding: 8,
+    zIndex: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5,
   },
   image: {
-    height: 200,
     width: '100%',
-    marginBottom: 10,
+    height: 350,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  data : {
+    position : 'relative',
+    top : -30,
+    borderTopLeftRadius : 35,
+    borderTopRightRadius : 35,
+    backgroundColor : '#fff',
+    padding : 20,
+    flex: 1,
+  },
+  titleName: {
+    fontSize: 18,
+    fontFamily : fonts.semibold,
+  },
+  description : {
+    fontFamily : fonts.medium,
   },
 });
-// import React, {useState, useEffect} from 'react';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// export default function HomeScreen() {
-//   const [user, setUser] = useState(null);
-//   const token = AsyncStorage.getItem("token");
-//   // useEffect(() => {s
-//   //   const fetchUser = async () => {
-//   //     const token = await AsyncStorage.getItem("token");
-//   //     if (!token) return;
-
-//   //     try {
-//   //       const response = await fetch(" https://17c6-41-248-88-254.ngrok-free.app/users/me", {
-//   //         headers: {
-//   //           Authorization: `Bearer ${token}`
-//   //         }
-//   //       });
-//   //       const data = await response.json();
-//   //       setUser(data);
-//   //     } catch (error) {
-//   //       console.error("Erreur lors de la récupération du profil", error);
-//   //     }
-//   //   };
-
-//   //   fetchUser();
-//   // }, []);
-
-//   return (
-//     <View>
-//       <Text>Accueil</Text>
-//        <View>
-//           {/* {user ? (
-//             <Text>Bienvenue {user.firstName} {user.lastName}</Text>
-//           ) : (
-//             <Text>Chargement...</Text>
-//           )} */}
-//
-//       </View>
-//     </View>
-//   );
-// }

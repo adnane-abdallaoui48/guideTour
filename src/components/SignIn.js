@@ -20,7 +20,7 @@ export default function SignIn({ navigation }) {
     }
 
     try {
-      const response = await fetch("https://1601-196-81-34-139.ngrok-free.app/users/login", {
+      const response = await fetch("https://aa2a-160-179-120-241.ngrok-free.app/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 12,
-    marginTop: 50,
+    marginTop: 80,
   },
   subtitle: {
     fontSize: 14,

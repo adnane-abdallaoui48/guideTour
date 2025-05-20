@@ -47,7 +47,7 @@ const HomeScreen = () => {
   useEffect(() => {
     const fetchLieux = async () => {
       try {
-        const response = await fetch('https://1601-196-81-34-139.ngrok-free.app/places'); 
+        const response = await fetch('https://aa2a-160-179-120-241.ngrok-free.app/places'); 
         if (!response.ok) {
           throw new Error(`Erreur HTTP : ${response.status}`);
         }

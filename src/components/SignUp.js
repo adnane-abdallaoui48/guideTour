@@ -63,7 +63,7 @@ const SignUp = ({ navigation }) => {
     const { confirmPassword, ...userData } = form;
     setIsLoading(true);
     try {
-      const response = await fetch("https://1601-196-81-34-139.ngrok-free.app/users/register", {
+      const response = await fetch("https://aa2a-160-179-120-241.ngrok-free.app/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
