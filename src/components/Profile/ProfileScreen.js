@@ -5,6 +5,7 @@ import { fonts } from '../../../assets/styles/font';
 import { useNavigation } from '@react-navigation/native';
 import { handleLogout } from '../LogOut';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ProfileDetailsScreen from './ProfileDetailsScreen';
 
 
 
@@ -62,7 +63,7 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.cardsStyle}>
-            <Cards iconLibrary="FontAwesome5" iconName="user" name="Profil"/>
+            <Cards iconLibrary="FontAwesome5" iconName="user" name="Profil" onPress={() => navigation.navigate("ProfileDetails", { user })}/>
             <Cards iconLibrary="Ionicons" iconName="settings-outline" name="Paramètres" />
 
             <TouchableOpacity onPress={() => setModalVisible(true)}>

@@ -9,6 +9,7 @@ import Splash from './src/components/Splach';
 import Toast from 'react-native-toast-message';
 import MainTabs from './src/components/MainTabs';
 import DestinationDetail from './src/components/DestinationDetail';
+import ProfileDetailsScreen from './src/components/Profile/ProfileDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
         <Stack.Screen name="DestinationDetail" component={DestinationDetail} />
         <Stack.Screen name="SignIn" component={SignIn} />
         <Stack.Screen name="SignUp" component={SignUp} />
+        <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>

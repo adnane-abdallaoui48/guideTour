@@ -1,10 +1,10 @@
 import { View, Text } from 'react-native'
-import React from 'react'
 
-const ProfileDetailsScreen = () => {
+const ProfileDetailsScreen = ({route}) => {
+  const { user } = route.params || {};
   return (
     <View>
-      <Text>ProfileDetailsScreen</Text>
+      <Text>{user.firstName}</Text>
     </View>
   )
 }
