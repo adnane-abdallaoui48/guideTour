@@ -7,17 +7,23 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import images from "./../Images";
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import images from "./../Images";
 import { fonts } from '../../assets/styles/font';
 import Colors from './../constants/colors';
 import { useNavigation } from '@react-navigation/native';
+import { useUser } from './useUser';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FlatList } from 'react-native';
+import { BASE_URL } from '../../config';
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('Tourism');
-  const [favorites, setFavorites] = useState([]);
+  const [placeFavori, setPlaceFavori] = useState(false);
   const scrollRef = useRef(null);
   const [searchPlaces, setSearchPlaces] = useState({
     Tourism: '',
@@ -25,29 +31,16 @@ const HomeScreen = () => {
     Restaurant: '',
   }
   );
-
   const [lieux, setLieux] = useState([]); 
-  const toggleFavorite = (title) => {
-    if (favorites.includes(title)) {
-      setFavorites(favorites.filter((fav) => fav !== title));
-    } else {
-      setFavorites([...favorites, title]);
-    }
-  };
+  const { user } = useUser();
+  const Tabs = ['Tourism', 'Hotel', 'Restaurant']
+  const [loading, setLoading] = useState(true);
 
-  const handleTabChange = (tab) => {
-    if (tab !== activeTab) {
-      setActiveTab(tab);
-      scrollRef.current?.scrollTo({ x: 0, animated: true });
-    }
-  };
-
- 
-
+  
   useEffect(() => {
     const fetchLieux = async () => {
       try {
-        const response = await fetch('https://aa2a-160-179-120-241.ngrok-free.app/places'); 
+        const response = await fetch(`${BASE_URL}/places`); 
         if (!response.ok) {
           throw new Error(`Erreur HTTP : ${response.status}`);
         }
@@ -55,13 +48,48 @@ const HomeScreen = () => {
         setLieux(data); 
       } catch (err) {
         console.log(err)
-      } 
+      } finally {
+      setLoading(false);
+    }
     };
-
+    
     fetchLieux(); 
   }, []); 
 
+const toggleFavorite = async (placeId) => {
+  const token = await AsyncStorage.getItem('token');
+  if (!user) return;
+  try {
+    if (placeFavori) {
+      await fetch(`${BASE_URL}/favorites?userId=${user.id}&placeId=${placeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,  
+          'Content-Type': 'application/json',
+        },
+      });
+    } else {
+      await fetch(`${BASE_URL}/favorites?userId=${user.id}&placeId=${placeId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+    setPlaceFavori(!placeFavori);
+  } catch (err) {
+    console.log('Erreur lors de la mise à jour du favori :', err);
+  }
+};
 
+
+    const handleTabChange = (tab) => {
+      if (tab !== activeTab) {
+        setActiveTab(tab);
+        scrollRef.current?.scrollTo({ x: 0, animated: true });
+      }
+    };
 
   const recommendedPlaces = [
     {
@@ -81,7 +109,7 @@ const HomeScreen = () => {
 );
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
         <View style={styles.header}>
           <Text style={styles.title}>Explore</Text>
@@ -96,7 +124,7 @@ const HomeScreen = () => {
         </View>
 
         <View style={styles.tabs}>
-          {['Tourism', 'Hotel', 'Restaurant'].map((tab) => (
+          {Tabs.map((tab) => (
             <TouchableOpacity key={tab} onPress={() => handleTabChange(tab)}>
               <Text style={[styles.tab, activeTab === tab && styles.activeTab]}>{tab}</Text>
             </TouchableOpacity>
@@ -110,37 +138,43 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} ref={scrollRef}>
-             {filterPlacesCategory.map((item, index) => {
-            const isFavorite = favorites.includes(item.name);
-            scrollRef.current?.scrollTo({ y: 0, animated: true });
-            return (
-              <TouchableOpacity
-                key={index}
-                style={styles.card}
-                activeOpacity={0.8}
-                onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
-              >
-                <Image source={images[item.imageUrl]} style={styles.cardImage} />
-                <View style={styles.cardOverlay}>
-                  <Text style={styles.cardTitle}>{item.name}</Text>
-                  <View style={styles.rating}>
-                    <Ionicons name="star" size={14} color="gold" />
-                    <Text style={styles.ratingText}>5</Text>
-                  </View>
-                  <MaterialIcons
-                    name={isFavorite ? 'favorite' : 'favorite-border'}
-                    size={30}
-                    color="white"
-                    style={styles.favoriteIcon}
-                    onPress={() => toggleFavorite(item.name)}
-                  />
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
+            {/* scrollRef.current?.scrollTo({ y: 0, animated: true }); */}
+              {loading ? (
+                <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
+               ) : (
+              <FlatList
+                data={filterPlacesCategory}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => {
+                  return (
+                    <TouchableOpacity
+                      style={styles.card}
+                      activeOpacity={0.8}
+                      onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
+                    >
+                      <Image source={images[item.imageUrl]} style={styles.cardImage} />
+                      <View style={styles.cardOverlay}>
+                        <Text style={styles.cardTitle}>{item.name}</Text>
+                        <View style={styles.rating}>
+                          <Ionicons name="star" size={18} color="gold" />
+                          <Text style={styles.ratingText}>{item.rating}</Text>
+                        </View>
+                        <MaterialIcons
+                          name={placeFavori ? 'favorite' : 'favorite-border'}
+                          size={30}
+                          color="white"
+                          style={styles.favoriteIcon}
+                          onPress={() => toggleFavorite(item.id)}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+              )}
+            
         <Text style={styles.sectionTitle}>Recommandés</Text>
         <View style={styles.recommendedContainer}>
           {recommendedPlaces.map((item, index) => (
@@ -191,6 +225,7 @@ const styles = StyleSheet.create({
   searchInput: {
     marginLeft: 5,
     fontSize: 16,
+    fontFamily : fonts.regular,
     flex: 1,
   },
   tabs: {
@@ -253,6 +288,7 @@ const styles = StyleSheet.create({
   ratingText: {
     color: Colors.primary,
     marginLeft: 4,
+    fontFamily: fonts.semibold
   },
   favoriteIcon: {
     position: 'absolute',

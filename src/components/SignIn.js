@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView} from "react-native";
-import { Ionicons } from "@expo/vector-icons";  
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { FontAwesome, Ionicons } from "@expo/vector-icons";  
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fonts } from '../../assets/styles/font';
+import Colors from './../constants/colors';
+import { BASE_URL } from '../../config';
+// import GoogleSignInButton from './GoogleSignInButton'; 
 
 export default function SignIn({ navigation }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -20,7 +23,7 @@ export default function SignIn({ navigation }) {
     }
 
     try {
-      const response = await fetch("https://aa2a-160-179-120-241.ngrok-free.app/users/login", {
+      const response = await fetch(`${BASE_URL}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,14 +40,40 @@ export default function SignIn({ navigation }) {
         navigation.navigate('MainTabs', { screen: 'Accueil' });
         
       } else {
-        setErrors([data.message || "Email ou mot de passe incorrect."]);
+        setErrors(["Email ou mot de passe incorrect"]);
       }
     } catch (error) {
       console.error("Erreur lors de la connexion :", error);
-      setErrors(["Impossible de contacter le serveur."]);
+      setErrors(["Impossible de contacter le serveur"]);
     }
   };
 
+
+  // Gérer la connexion Google
+  /*
+  const handleGoogleLoginSuccess = async (idToken) => {
+    try {
+      const response = await fetch("https://ton-backend.com/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const { token } = data;
+        await AsyncStorage.setItem("token", token);
+        navigation.navigate('MainTabs', { screen: 'Accueil' });
+      } else {
+        setErrors(["Échec de la connexion Google"]);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la connexion Google :", error);
+      setErrors(["Impossible de contacter le serveur"]);
+    }
+  };
+*/
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Connectez-vous</Text>
@@ -58,13 +87,13 @@ export default function SignIn({ navigation }) {
         </View>
       )}
       
+      
       <TextInput 
         style={styles.input} 
         placeholder="Email" 
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-        
       />
 
       <View style={styles.passwordContainer}>
@@ -100,8 +129,10 @@ export default function SignIn({ navigation }) {
 
       <TouchableOpacity style={styles.socialIcons}>
         <FontAwesome name="google" size={24} color="#FFA500" />
-        <Text>Continuer avec Google</Text>
+        <Text style={styles.textGoogle}>Continuer avec Google</Text>
       </TouchableOpacity>
+
+      {/* <GoogleSignInButton onGoogleLoginSuccess={handleGoogleLoginSuccess} /> */}
     </ScrollView>
   );
 }
@@ -109,20 +140,21 @@ export default function SignIn({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.white,
     alignItems: "center",
     padding: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily : fonts.bold,
     marginBottom: 12,
     marginTop: 80,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "gray",
     marginBottom: 40,
+    fontFamily : fonts.regular
   },
   input: {
     width: "100%",
@@ -131,6 +163,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 24,
     backgroundColor: "#f9f9f9",
+    fontFamily : fonts.regular
   },
   passwordContainer: {
     width: "100%",
@@ -138,22 +171,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     backgroundColor: "#f9f9f9",
     marginBottom: 16,
   },
   passwordInput: {
     flex: 1,
+    fontFamily : fonts.regular
   },
   forgotPassword: {
-    color: "#FFA500",
+    color: Colors.primary,
     marginBottom: 25,
+    fontFamily : fonts.semibold
   },
   forgotPasswordEnd: {
     alignSelf: "flex-end",
   },
   signInButton: {
-    backgroundColor: "#FFA500",
+    backgroundColor: Colors.primary,
     width: "100%",
     paddingVertical: 15,
     borderRadius: 10,
@@ -161,21 +196,23 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   signInText: {
-    color: "#fff",
+    color: Colors.white,
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily : fonts.semibold
   },
   signUpText: {
     marginTop: 30,
     fontSize: 14,
+    fontFamily : fonts.medium
   },
   signUpLink: {
-    color: "#FFA500",
-    fontWeight: "bold",
+    color: Colors.primary,
+    fontFamily : fonts.semibold
   },
   orText: {
     marginTop: 15,
     color: "gray",
+    fontFamily : fonts.medium
   },
   socialIcons: {
     flexDirection: "row",
@@ -189,6 +226,9 @@ const styles = StyleSheet.create({
     borderColor: "#FFA500",
     justifyContent: "center",
   },
+  textGoogle: {
+    fontFamily : fonts.medium
+  },
   errorContainer: {
     width: "100%",
     marginBottom: 12,
@@ -196,5 +236,6 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     fontSize: 14,
+    fontFamily : fonts.medium
   },
 });

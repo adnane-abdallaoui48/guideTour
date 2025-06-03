@@ -21,10 +21,7 @@ export default function DestinationDetail({route}) {
         <View style={styles.data}>
           <Text style={styles.titleName}>{lieu.name}</Text>
           <Text numberOfLines={3} style={styles.description}>
-            Marina Saïdia est un port de plaisance moderne situé sur la côte méditerranéenne 
-            du Maroc. C’est un endroit idéal pour les amateurs de nautisme, avec de nombreuses activités comme la voile, 
-            la plongée et les sports nautiques. La marina offre aussi des services pratiques comme des restaurants, des boutiques,
-            et des espaces de détente. C’est une destination parfaite pour profiter de la mer dans un cadre sécurisé et agréable.
+            {lieu.description}
           </Text>      
         </View>
       </View>
@@ -69,6 +66,6 @@ const styles = StyleSheet.create({
     fontFamily : fonts.semibold,
   },
   description : {
-    fontFamily : fonts.medium,
+    fontFamily : fonts.regular,
   },
 });

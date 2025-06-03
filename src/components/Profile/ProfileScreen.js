@@ -1,68 +1,42 @@
-import { View, Text, StyleSheet, ScrollView, Image, Modal, Pressable, TouchableOpacity } from 'react-native'
-import { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Modal, Pressable, TouchableOpacity } from 'react-native'
+import { useState } from 'react'
 import Cards from './Cards/Cards'
 import { fonts } from '../../../assets/styles/font';
 import { useNavigation } from '@react-navigation/native';
 import { handleLogout } from '../LogOut';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import ProfileDetailsScreen from './ProfileDetailsScreen';
-
+import { useUser } from '../useUser';
+import colors from '../../constants/colors';
 
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [notifStatus, setNotifStatus] = useState("Allow");
-    const [user, setUser] = useState(null);
+    const { user, loading } = useUser();
 
-    useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');  
-
-        if (!token) {
-          console.log('Token non trouvé');
-          return;
-        }
-
-        const response = await fetch('https://aa2a-160-179-120-241.ngrok-free.app/users/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);  
-        } else {
-          const err = await response.json();
-          console.error('Erreur:', err.message);
-        }
-      } catch (error) {
-        console.error('Erreur réseau ou autre:', error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
+    if (loading) {
+      return (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
   return (
     <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.compteContainer}>
-            <Image source={require('../../../assets/men.jpg')} style={styles.compteImage} />
+            <Image source={require('../../../assets/adnane.png')} style={styles.compteImage} />
             <View>
                 {user && (
-  <>
-    <Text style={styles.titleName}>{user.lastName} {user.firstName}</Text>
-    <Text style={styles.titleEmail}>{user.email}</Text>
-        </>
-)}
+                <>
+                    <Text style={styles.titleName}>{user.lastName} {user.firstName}</Text>
+                    <Text style={styles.titleEmail}>{user.email}</Text>
+                </>
+                )}
             </View>  
         </View>
 
         <View style={styles.cardsStyle}>
+            
             <Cards iconLibrary="FontAwesome5" iconName="user" name="Profil" onPress={() => navigation.navigate("ProfileDetails", { user })}/>
             <Cards iconLibrary="Ionicons" iconName="settings-outline" name="Paramètres" />
 
@@ -116,7 +90,8 @@ const styles = StyleSheet.create({
     },
     titleEmail : {
         color: "#6B7280",
-        fontFamily: fonts.regular
+        fontFamily: fonts.regular,
+        fontSize : 13
     },
     compteImage : {
         width: 70,
@@ -124,9 +99,9 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         marginRight: 20,
         },
-        cardsStyle: {
-            marginTop: 20,
-        },
+    cardsStyle: {
+         marginTop: 20,
+    },
         
   modalOverlay: {
     flex: 1,
@@ -152,4 +127,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: "#111827",
   },
+
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
+  },
+ 
 })
