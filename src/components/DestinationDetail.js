@@ -1,5 +1,6 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';  // <== important
+import { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'; 
+import { SafeAreaView } from 'react-native-safe-area-context';  
 import images from "./../Images";
 import { fonts } from '../../assets/styles/font';
 import { useNavigation } from '@react-navigation/native';
@@ -8,52 +9,63 @@ import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { Ionicons } from '@expo/vector-icons';
 import Map from './Map';  
 
-export default function DestinationDetail({route}) {
+export default function DestinationDetail({ route }) {
   const { lieu } = route.params;
   const navigation = useNavigation();
+  const [showMap, setShowMap] = useState(false);
+
+  // Afficher la carte après un délai pour alléger le premier rendu
+  useEffect(() => {
+    const timeout = setTimeout(() => setShowMap(true), 500); // 0.5s
+    return () => clearTimeout(timeout);
+  }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
       <View style={styles.container}>
-        <TouchableOpacity style={styles.backButton} activeOpacity={0.8} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backButton} activeOpacity={0.8} onPress={navigation.goBack}>
           <MaterialIcons name="arrow-back-ios-new" size={24} color="black" />
         </TouchableOpacity>
 
         <Image source={images[lieu.imageUrl]} style={styles.image} />
-    
-        <View style={styles.data}>
-          <View style= {styles.titleRating}>
-              <Text style={styles.titleName}>{lieu.name}</Text>
-              <View style={styles.rating}>
-                  <Ionicons name="star" size={18} color="gold" />
-                  <Text style={styles.ratingText}>{lieu.rating} (10 avis)</Text>
-              </View>
+
+        <ScrollView style={styles.data} showsVerticalScrollIndicator={false} >
+          <View style={styles.titleRating}>
+            <Text style={styles.titleName}>{lieu.name}</Text>
+            <View style={styles.rating}>
+              <Ionicons name="star" size={18} color="gold" />
+              <Text style={styles.ratingText}>{lieu.rating} (10 avis)</Text>
+            </View>
           </View>
-         
+
           <View style={styles.province}>
             <EvilIcons name="location" size={24} color="gray" />
             <Text style={styles.ngPr}>{lieu.address}</Text>
           </View>
+
           <View style={styles.about}>
             <Text style={styles.aboutT}>Description</Text>
-            <Text numberOfLines={3} style={styles.description}>
+            <Text numberOfLines={5} style={styles.description}>
               {lieu.description}
-            </Text> 
+            </Text>
           </View>
 
-        <Map
-          latitude={lieu.latitude}
-          longitude={lieu.longitude}
-          name={lieu.name}
-          address={lieu.address}
-        />
-
-
+        {showMap && (
+        <View style={styles.mapContainer}>
+          <Map
+            latitude={lieu.latitude}
+            longitude={lieu.longitude}
+            name={lieu.name}
+            address={lieu.address}
+          />
         </View>
+      )}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
-};
+}
+
 
 const styles = StyleSheet.create({
   container : {
@@ -119,5 +131,11 @@ const styles = StyleSheet.create({
     fontFamily : fonts.semibold,
     fontSize : 16,
     marginBottom : 5
-  }
+  },
+  mapContainer: {
+  marginTop: 20,
+  paddingBottom: 60, 
+  marginBottom: 30,  
+},
+
 });

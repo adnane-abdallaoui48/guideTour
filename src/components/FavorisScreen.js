@@ -1,56 +1,103 @@
-import { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
+} from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import images from './../Images';
 import { fonts } from '../../assets/styles/font';
+import { BASE_URL } from '../../config';
+import colors from '../constants/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function FavorisScreen() {
   const navigation = useNavigation();
-  const [favorites, setFavorites] = useState([
-    {
-      id: '1',
-      name: 'Marina Saïdia',
-      imageUrl: '../assets/images/plageSaidia.jpg',
-      description: 'Un port de plaisance moderne situé sur la côte méditerranéenne du Maroc.',
-    },
-    {
-      id: '2',
-      name: 'Plage de Tanger',
-      imageUrl: 'plageTanger',
-      description: 'Une plage magnifique avec du sable fin et une eau claire.',
-    },
-  ]);
 
-  const renderItem = ({ item }) => (
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [firstLoad, setFirstLoad] = useState(true); // pour éviter les flashs
+
+  const fetchFavorites = useCallback(async () => {
+    try {
+      if (firstLoad) setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.warn("Token non trouvé");
+        return setFavorites([]);
+      }
+
+      const response = await fetch(`${BASE_URL}/favorites`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const sorted = data.sort((a, b) => b.id - a.id);
+        setFavorites(sorted);
+      } else {
+        const err = await response.json();
+        console.error("Erreur récupération favoris :", err.message || err);
+      }
+    } catch (err) {
+      console.error("Erreur réseau :", err);
+    } finally {
+      if (firstLoad) {
+        setLoading(false);
+        setFirstLoad(false);
+      }
+    }
+  }, [firstLoad]);
+
+  // Recharger quand on entre dans l'écran
+  useFocusEffect(
+    useCallback(() => {
+      fetchFavorites();
+    }, [fetchFavorites])
+  );
+
+  const renderItem = useCallback(({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
+      onPress={() => navigation.navigate('DestinationDetail', { lieu: item.place })}
     >
-      <Image source={images['marinaSaidia.jpg']} style={styles.image} />
+      <Image source={images[item.place.imageUrl]} style={styles.image} />
       <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text numberOfLines={2} style={styles.description}>{item.description}</Text>
+        <Text style={styles.name}>{item.place?.name || 'Sans nom'}</Text>
+        <Text numberOfLines={2} style={styles.description}>
+          {item.place?.description || 'Pas de description'}</Text>
       </View>
     </TouchableOpacity>
-  );
+  ), [navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.fav}>
-         <TouchableOpacity style={styles.backButton} activeOpacity={0.8} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back-ios-new" size={24} color="black" />
-          </TouchableOpacity>
-         <Text style={styles.favT}>Mes favoris</Text>
+      <View style={styles.favHeader}>
+        <TouchableOpacity style={styles.backButton} activeOpacity={0.8} onPress={navigation.goBack}>
+          <MaterialIcons name="arrow-back-ios-new" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.favTitle}>Mes favoris</Text>
       </View>
-      
+
       <View style={styles.container}>
-        {favorites.length === 0 ? (
-          <Text style={styles.emptyText}>Aucun favori pour le moment.</Text>
+        {firstLoad && loading ? (
+          <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+        ) : favorites.length === 0 ? (
+          <Text style={styles.emptyText}>Aucun lieu favori pour le moment.</Text>
         ) : (
           <FlatList
             data={favorites}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
             contentContainerStyle={{ paddingBottom: 20 }}
           />
@@ -70,28 +117,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 20,
   },
-  fav : {
-    marginTop : 50,
+  favHeader: {
+    marginTop: 50,
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 15,
-    alignItems : "center"
   },
-  favT: {
+  favTitle: {
     fontFamily: fonts.semibold,
     fontSize: 25,
-    marginLeft: 30
+    marginLeft: 30,
   },
   backButton: {
-    alignSelf: "flex-start",
     backgroundColor: "#f9f9f9",
     borderRadius: 50,
-    padding: 10
+    padding: 10,
   },
   card: {
     flexDirection: 'row',
+    marginTop: 20,
     marginBottom: 15,
     backgroundColor: 'white',
-    marginTop : 20,
     borderRadius: 15,
     overflow: 'hidden',
     elevation: 2,
@@ -123,64 +169,7 @@ const styles = StyleSheet.create({
     color: '#999',
     fontFamily: fonts.medium,
   },
+  loader: {
+    marginTop: 20,
+  },
 });
-/*
-import { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
-import { useUser } from './useUser';
-
-const FavoritesScreen = ({ userId }) => {
-  const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const {user} = useUser()
-  useEffect(() => {
-    fetch(`https://7702-160-178-143-5.ngrok-free.app/favorites/${user.id}`)
-      .then(response => response.json())
-      .then(data => {
-        setFavorites(data);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Erreur:', error);
-        setLoading(false);
-      });
-  }, [userId]);
-
-  if (loading) {
-    return <ActivityIndicator size="large" style={styles.loader} />;
-  }
-
-  if (favorites.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text>Aucun favori trouvé.</Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={favorites}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.favoriteItem}>
-            <Text style={styles.title}>{item.placeName}</Text>
-           
-          </View>
-        )}
-      />
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  favoriteItem: { padding: 12, borderBottomWidth: 1, borderColor: '#ccc' },
-  title: { fontSize: 16, fontWeight: 'bold' },
-});
-
-export default FavoritesScreen;
-*/
-

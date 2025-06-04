@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect} from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Text,
   View,
@@ -20,100 +20,87 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FlatList } from 'react-native';
 import { BASE_URL } from '../../config';
 
+
+const fetchPlacesFromApi = async () => {
+  const response = await fetch(`${BASE_URL}/places`);
+  if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
+  return await response.json();
+};
+
+const loadFavoritesFromStorage = async () => {
+  const favData = await AsyncStorage.getItem('favorites');
+  return favData ? JSON.parse(favData) : [];
+};
+
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const [activeTab, setActiveTab] = useState('Tourism');
-  const [favorites, setFavorites] = useState([]);
   const scrollRef = useRef(null);
-  const [searchPlaces, setSearchPlaces] = useState({
-    Tourism: '',
-    Hotel: '',
-    Restaurant: '',
-  }
-  );
-  const [lieux, setLieux] = useState([]); 
   const { user } = useUser();
-  const Tabs = ['Tourism', 'Hotel', 'Restaurant']
-  const [loading, setLoading] = useState(true);
 
+  const [activeTab, setActiveTab] = useState('Tourisme');
+  const [favorites, setFavorites] = useState([]);
+  const [searchPlaces, setSearchPlaces] = useState({ Tourisme: '', Hotel: '', Restaurant: '' });
+  const [lieux, setLieux] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  const Tabs = ['Tourisme', 'Hotel', 'Restaurant'];
   
   useEffect(() => {
-    const loadFavorites = async () => {
+    const initialize = async () => {
       try {
-        const favData = await AsyncStorage.getItem('favorites');
-        if (favData) {
-          setFavorites(JSON.parse(favData));
-        }
-      } catch (error) {
-        console.log('Erreur chargement favoris:', error);
+        const [favs, places] = await Promise.all([
+          loadFavoritesFromStorage(),
+          fetchPlacesFromApi(),
+        ]);
+        setFavorites(favs);
+        setLieux(places);
+      } catch (err) {
+        console.error('Erreur init:', err);
+      } finally {
+        setLoading(false);
       }
     };
-
-    loadFavorites();
+    initialize();
   }, []);
 
-  useEffect(() => {
-    const fetchLieux = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/places`); 
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP : ${response.status}`);
-        }
-        const data = await response.json();
-        setLieux(data); 
-      } catch (err) {
-        console.log(err)
-      } finally {
-      setLoading(false);
-    }
-    };
-    
-    fetchLieux(); 
-  }, []); 
+ 
+  const toggleFavorite = async (placeId) => {
+    if (!user) return;
 
-const toggleFavorite = async (placeId) => {
-  
-  if (!user) return;
-  const isFavorite = favorites.includes(placeId);
-    let newFavorites;
+    const isFavorite = favorites.includes(placeId);
+    const newFavorites = isFavorite
+      ? favorites.filter((fav) => fav !== placeId)
+      : [...favorites, placeId];
 
-    if (isFavorite) {
-      newFavorites = favorites.filter((fav) => fav !== placeId);
-    } else {
-      newFavorites = [...favorites, placeId];
-    }
-  // Mettre à jour l'état
     setFavorites(newFavorites);
+    await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
 
-    // Sauvegarder dans AsyncStorage
+    const token = await AsyncStorage.getItem('token');
     try {
-      await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
-    } catch (error) {
-      console.log('Erreur sauvegarde favoris:', error);
-    }
-  const token = await AsyncStorage.getItem('token');
-  try {
-    if (isFavorite) {
-      await fetch(`${BASE_URL}/favorites?userId=${user.id}&placeId=${placeId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,  
-          'Content-Type': 'application/json',
-        },
-      });
-    } else {
-      await fetch(`${BASE_URL}/favorites?userId=${user.id}&placeId=${placeId}`, {
-        method: 'POST',
+      await fetch(`${BASE_URL}/favorites/${placeId}`, {
+        method: isFavorite ? 'DELETE' : 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
+    } catch (err) {
+      console.log('Erreur lors de la mise à jour du favori :', err);
     }
-  } catch (err) {
-    console.log('Erreur lors de la mise à jour du favori :', err);
-  }
-};
+  };
+
+  const handleTabChange = (tab) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      scrollRef.current?.scrollTo({ x: 0, animated: true });
+    }
+  };
+
+  const filteredPlaces = useMemo(() => {
+    return lieux.filter((place) =>
+      place.name.toLowerCase().includes(searchPlaces[activeTab]?.toLowerCase()) &&
+      place.category?.toLowerCase() === activeTab.toLowerCase()
+    );
+  }, [lieux, searchPlaces, activeTab]);
 
   const recommendedPlaces = [
     {
@@ -125,18 +112,6 @@ const toggleFavorite = async (placeId) => {
       image: require('../../assets/images/marinaSaidia.jpg'),
     },
   ];
-
-  const handleTabChange = (tab) => {
-    if (tab !== activeTab) {
-      setActiveTab(tab);
-      scrollRef.current?.scrollTo({ x: 0, animated: true });
-    }
-  };
- const filterPlacesCategory = lieux.filter((place) =>
-    place.name.toLowerCase().includes(searchPlaces[activeTab]?.toLowerCase()) &&
-    place.category?.toLowerCase() === activeTab.toLowerCase()
-);
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -172,7 +147,7 @@ const toggleFavorite = async (placeId) => {
                 <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
                ) : (
               <FlatList
-                data={filterPlacesCategory}
+                data={filteredPlaces}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.id.toString()}
