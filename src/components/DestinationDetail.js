@@ -4,6 +4,9 @@ import images from "./../Images";
 import { fonts } from '../../assets/styles/font';
 import { useNavigation } from '@react-navigation/native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import EvilIcons from '@expo/vector-icons/EvilIcons';
+import { Ionicons } from '@expo/vector-icons';
+import Map from './Map';  
 
 export default function DestinationDetail({route}) {
   const { lieu } = route.params;
@@ -17,12 +20,35 @@ export default function DestinationDetail({route}) {
         </TouchableOpacity>
 
         <Image source={images[lieu.imageUrl]} style={styles.image} />
-
+    
         <View style={styles.data}>
-          <Text style={styles.titleName}>{lieu.name}</Text>
-          <Text numberOfLines={3} style={styles.description}>
-            {lieu.description}
-          </Text>      
+          <View style= {styles.titleRating}>
+              <Text style={styles.titleName}>{lieu.name}</Text>
+              <View style={styles.rating}>
+                  <Ionicons name="star" size={18} color="gold" />
+                  <Text style={styles.ratingText}>{lieu.rating} (10 avis)</Text>
+              </View>
+          </View>
+         
+          <View style={styles.province}>
+            <EvilIcons name="location" size={24} color="gray" />
+            <Text style={styles.ngPr}>{lieu.address}</Text>
+          </View>
+          <View style={styles.about}>
+            <Text style={styles.aboutT}>Description</Text>
+            <Text numberOfLines={3} style={styles.description}>
+              {lieu.description}
+            </Text> 
+          </View>
+
+        <Map
+          latitude={lieu.latitude}
+          longitude={lieu.longitude}
+          name={lieu.name}
+          address={lieu.address}
+        />
+
+
         </View>
       </View>
     </SafeAreaView>
@@ -55,11 +81,23 @@ const styles = StyleSheet.create({
   data : {
     position : 'relative',
     top : -30,
-    borderTopLeftRadius : 35,
-    borderTopRightRadius : 35,
+    borderTopLeftRadius : 30,
+    borderTopRightRadius : 30,
     backgroundColor : '#fff',
     padding : 20,
     flex: 1,
+  },
+  titleRating : {
+    flexDirection : 'row',
+    justifyContent: 'space-between',
+    marginBottom : 5
+  },
+  rating : {
+    flexDirection : 'row',
+  },
+  ratingText : {
+    marginLeft : 4,
+    fontFamily : fonts.medium
   },
   titleName: {
     fontSize: 18,
@@ -68,4 +106,18 @@ const styles = StyleSheet.create({
   description : {
     fontFamily : fonts.regular,
   },
+  province : {
+    flexDirection : 'row'
+  },
+  ngPr : {
+    fontFamily : fonts.regular
+  },
+  about : {
+    marginTop : 20
+  },
+  aboutT : {
+    fontFamily : fonts.semibold,
+    fontSize : 16,
+    marginBottom : 5
+  }
 });

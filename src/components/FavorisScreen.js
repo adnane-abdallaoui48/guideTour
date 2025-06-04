@@ -6,7 +6,6 @@ import images from './../Images';
 import { fonts } from '../../assets/styles/font';
 
 export default function FavorisScreen() {
-
   const navigation = useNavigation();
   const [favorites, setFavorites] = useState([
     {
@@ -91,7 +90,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     marginBottom: 15,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     marginTop : 20,
     borderRadius: 15,
     overflow: 'hidden',

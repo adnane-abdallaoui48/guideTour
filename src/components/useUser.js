@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../config';
 export function useUser() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Ajout de l'état de chargement
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -36,7 +36,7 @@ export function useUser() {
         console.error('Erreur réseau ou autre:', error);
         setUser(null);
       } finally {
-        setLoading(false); // Arrête le chargement quoi qu’il arrive
+        setLoading(false); 
       }
     };
 

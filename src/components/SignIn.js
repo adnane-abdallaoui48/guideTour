@@ -5,7 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fonts } from '../../assets/styles/font';
 import Colors from './../constants/colors';
 import { BASE_URL } from '../../config';
-// import GoogleSignInButton from './GoogleSignInButton'; 
 
 export default function SignIn({ navigation }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -14,42 +13,74 @@ export default function SignIn({ navigation }) {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState([]);
 
-  const handleLogin = async () => {
-    setErrors([]);
+  // const handleLogin = async () => {*
+  //   setErrors([]);
 
-    if (!email || !password) {
-      setErrors(["Veuillez remplir tous les champs."]);
-      return;
-    }
+  //   if (!email || !password) {
+  //     setErrors(["Veuillez remplir tous les champs."]);
+  //     return;
+  //   }
 
-    try {
-      const response = await fetch(`${BASE_URL}/users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  //   try {
+  //     const response = await fetch(`${BASE_URL}/users/login`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ email, password }),
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (response.ok) {
-        const { token } = data;
-        console.log(data);
-        await AsyncStorage.setItem("token", token);
-        navigation.navigate('MainTabs', { screen: 'Accueil' });
+  //     if (response.ok) {
+  //       const { token } = data;
+  //       await AsyncStorage.setItem("token", token);
+  //       navigation.navigate('MainTabs', { screen: 'Accueil' });
         
-      } else {
-        setErrors(["Email ou mot de passe incorrect"]);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la connexion :", error);
-      setErrors(["Impossible de contacter le serveur"]);
-    }
-  };
+  //     } else {
+  //       setErrors(["Email ou mot de passe incorrect"]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Erreur lors de la connexion :", error);
+  //     setErrors(["Impossible de contacter le serveur"]);
+  //   }
+  // };
 
 
   // Gérer la connexion Google
+  const handleLogin = async () => { 
+  setErrors([]);
+
+  if (!email || !password) {
+    setErrors(["Veuillez remplir tous les champs."]);
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/users/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username: email, password }), // ← ici
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      const { token } = data;
+      await AsyncStorage.setItem("token", token);
+      navigation.navigate('MainTabs', { screen: 'Accueil' });
+      
+    } else {
+      setErrors(["Email ou mot de passe incorrect"]);
+    }
+  } catch (error) {
+    console.error("Erreur lors de la connexion :", error);
+    setErrors(["Impossible de contacter le serveur"]);
+  }
+};
+
   /*
   const handleGoogleLoginSuccess = async (idToken) => {
     try {

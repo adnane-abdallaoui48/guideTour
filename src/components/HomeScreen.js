@@ -23,7 +23,7 @@ import { BASE_URL } from '../../config';
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('Tourism');
-  const [placeFavori, setPlaceFavori] = useState(false);
+  const [favorites, setFavorites] = useState([]);
   const scrollRef = useRef(null);
   const [searchPlaces, setSearchPlaces] = useState({
     Tourism: '',
@@ -37,6 +37,21 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
 
   
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const favData = await AsyncStorage.getItem('favorites');
+        if (favData) {
+          setFavorites(JSON.parse(favData));
+        }
+      } catch (error) {
+        console.log('Erreur chargement favoris:', error);
+      }
+    };
+
+    loadFavorites();
+  }, []);
+
   useEffect(() => {
     const fetchLieux = async () => {
       try {
@@ -57,10 +72,28 @@ const HomeScreen = () => {
   }, []); 
 
 const toggleFavorite = async (placeId) => {
-  const token = await AsyncStorage.getItem('token');
+  
   if (!user) return;
+  const isFavorite = favorites.includes(placeId);
+    let newFavorites;
+
+    if (isFavorite) {
+      newFavorites = favorites.filter((fav) => fav !== placeId);
+    } else {
+      newFavorites = [...favorites, placeId];
+    }
+  // Mettre à jour l'état
+    setFavorites(newFavorites);
+
+    // Sauvegarder dans AsyncStorage
+    try {
+      await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
+    } catch (error) {
+      console.log('Erreur sauvegarde favoris:', error);
+    }
+  const token = await AsyncStorage.getItem('token');
   try {
-    if (placeFavori) {
+    if (isFavorite) {
       await fetch(`${BASE_URL}/favorites?userId=${user.id}&placeId=${placeId}`, {
         method: 'DELETE',
         headers: {
@@ -77,19 +110,10 @@ const toggleFavorite = async (placeId) => {
         },
       });
     }
-    setPlaceFavori(!placeFavori);
   } catch (err) {
     console.log('Erreur lors de la mise à jour du favori :', err);
   }
 };
-
-
-    const handleTabChange = (tab) => {
-      if (tab !== activeTab) {
-        setActiveTab(tab);
-        scrollRef.current?.scrollTo({ x: 0, animated: true });
-      }
-    };
 
   const recommendedPlaces = [
     {
@@ -102,7 +126,12 @@ const toggleFavorite = async (placeId) => {
     },
   ];
 
-
+  const handleTabChange = (tab) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      scrollRef.current?.scrollTo({ x: 0, animated: true });
+    }
+  };
  const filterPlacesCategory = lieux.filter((place) =>
     place.name.toLowerCase().includes(searchPlaces[activeTab]?.toLowerCase()) &&
     place.category?.toLowerCase() === activeTab.toLowerCase()
@@ -148,6 +177,7 @@ const toggleFavorite = async (placeId) => {
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => {
+                  const isFavorite = favorites.includes(item.id);
                   return (
                     <TouchableOpacity
                       style={styles.card}
@@ -162,7 +192,7 @@ const toggleFavorite = async (placeId) => {
                           <Text style={styles.ratingText}>{item.rating}</Text>
                         </View>
                         <MaterialIcons
-                          name={placeFavori ? 'favorite' : 'favorite-border'}
+                          name={isFavorite ? 'favorite' : 'favorite-border'}
                           size={30}
                           color="white"
                           style={styles.favoriteIcon}
