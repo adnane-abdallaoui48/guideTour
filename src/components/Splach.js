@@ -21,7 +21,6 @@ export default function Splash({ navigation }) {
       }),
     ]).start();
 
-    // Après 3 secondes, naviguer
     const checkToken = async () => {
       const token = await AsyncStorage.getItem("token");
       setTimeout(() => {

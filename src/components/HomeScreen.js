@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import images from "./../Images";
 import { fonts } from '../../assets/styles/font';
 import Colors from './../constants/colors';
 import { useNavigation } from '@react-navigation/native';
@@ -37,12 +36,12 @@ const HomeScreen = () => {
   const scrollRef = useRef(null);
   const { user } = useUser();
 
-  const [activeTab, setActiveTab] = useState('Tourisme');
+  const [activeTab, setActiveTab] = useState('Tourism');
   const [favorites, setFavorites] = useState([]);
-  const [searchPlaces, setSearchPlaces] = useState({ Tourisme: '', Hotel: '', Restaurant: '' });
+  const [searchPlaces, setSearchPlaces] = useState({ Tourism: '', Hotel: '', Restaurant: '' });
   const [lieux, setLieux] = useState([]); 
   const [loading, setLoading] = useState(true);
-  const Tabs = ['Tourisme', 'Hotel', 'Restaurant'];
+  const Tabs = ['Tourism', 'Hotel', 'Restaurant'];
   
   useEffect(() => {
     const initialize = async () => {
@@ -91,7 +90,7 @@ const HomeScreen = () => {
   const handleTabChange = (tab) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
-      scrollRef.current?.scrollTo({ x: 0, animated: true });
+      scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
     }
   };
 
@@ -142,11 +141,11 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-            {/* scrollRef.current?.scrollTo({ y: 0, animated: true }); */}
               {loading ? (
                 <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
                ) : (
               <FlatList
+                ref={scrollRef}
                 data={filteredPlaces}
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -159,7 +158,8 @@ const HomeScreen = () => {
                       activeOpacity={0.8}
                       onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
                     >
-                      <Image source={images[item.imageUrl]} style={styles.cardImage} />
+                      {/* <Image source={images[item.imageUrl]} style={styles.cardImage} /> */}
+                      <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
                       <View style={styles.cardOverlay}>
                         <Text style={styles.cardTitle}>{item.name}</Text>
                         <View style={styles.rating}>

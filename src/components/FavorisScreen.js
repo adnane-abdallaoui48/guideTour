@@ -22,7 +22,7 @@ export default function FavorisScreen() {
 
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [firstLoad, setFirstLoad] = useState(true); // pour éviter les flashs
+  const [firstLoad, setFirstLoad] = useState(true); 
 
   const fetchFavorites = useCallback(async () => {
     try {
@@ -71,7 +71,7 @@ export default function FavorisScreen() {
       style={styles.card}
       onPress={() => navigation.navigate('DestinationDetail', { lieu: item.place })}
     >
-      <Image source={images[item.place.imageUrl]} style={styles.image} />
+      <Image source={{uri : item.place.imageUrl}} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.name}>{item.place?.name || 'Sans nom'}</Text>
         <Text numberOfLines={2} style={styles.description}>

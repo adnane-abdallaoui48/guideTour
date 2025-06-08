@@ -27,7 +27,7 @@ export default function DestinationDetail({ route }) {
           <MaterialIcons name="arrow-back-ios-new" size={24} color="black" />
         </TouchableOpacity>
 
-        <Image source={images[lieu.imageUrl]} style={styles.image} />
+        <Image source={{uri : lieu.imageUrl}} style={styles.image} />
 
         <ScrollView style={styles.data} showsVerticalScrollIndicator={false} >
           <View style={styles.titleRating}>
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 30,    // <-- plus haut pour éviter l'encoche
+    top: 30,    
     left: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 20,
@@ -119,7 +119,8 @@ const styles = StyleSheet.create({
     fontFamily : fonts.regular,
   },
   province : {
-    flexDirection : 'row'
+    flexDirection : 'row',
+    paddingRight : 10
   },
   ngPr : {
     fontFamily : fonts.regular
