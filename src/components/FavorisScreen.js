@@ -11,11 +11,9 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import images from './../Images';
 import { fonts } from '../../assets/styles/font';
-import { BASE_URL } from '../../config';
 import colors from '../constants/colors';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchFavorites } from '../services/api';
 
 export default function FavorisScreen() {
   const navigation = useNavigation();
@@ -24,46 +22,28 @@ export default function FavorisScreen() {
   const [loading, setLoading] = useState(true);
   const [firstLoad, setFirstLoad] = useState(true); 
 
-  const fetchFavorites = useCallback(async () => {
-    try {
-      if (firstLoad) setLoading(true);
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.warn("Token non trouvé");
-        return setFavorites([]);
-      }
-
-      const response = await fetch(`${BASE_URL}/favorites`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const sorted = data.sort((a, b) => b.id - a.id);
-        setFavorites(sorted);
-      } else {
-        const err = await response.json();
-        console.error("Erreur récupération favoris :", err.message || err);
-      }
-    } catch (err) {
-      console.error("Erreur réseau :", err);
-    } finally {
-      if (firstLoad) {
-        setLoading(false);
-        setFirstLoad(false);
-      }
+  const fetchFavoritesFromApi = useCallback(async () => {
+  try {
+    if (firstLoad) setLoading(true);
+    const response = await fetchFavorites();
+    
+    const sorted = response.data.sort((a, b) => b.id - a.id);
+    setFavorites(sorted);
+  } catch (err) {
+    console.error("Erreur récupération favoris :", err.response?.data?.message || err.message);
+  } finally {
+    if (firstLoad) {
+      setLoading(false);
+      setFirstLoad(false);
     }
-  }, [firstLoad]);
+  }
+}, [firstLoad]);
 
   // Recharger quand on entre dans l'écran
   useFocusEffect(
     useCallback(() => {
-      fetchFavorites();
-    }, [fetchFavorites])
+      fetchFavoritesFromApi();
+    }, [fetchFavoritesFromApi])
   );
 
   const renderItem = useCallback(({ item }) => (

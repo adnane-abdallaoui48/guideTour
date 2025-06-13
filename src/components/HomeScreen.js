@@ -1,92 +1,59 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import {
-  Text,
-  View,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { Text, View, StyleSheet, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons} from '@expo/vector-icons';
 import { fonts } from '../../assets/styles/font';
 import Colors from './../constants/colors';
 import { useNavigation } from '@react-navigation/native';
-import { useUser } from './useUser';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FlatList } from 'react-native';
-import { BASE_URL } from '../../config';
-
-
-const fetchPlacesFromApi = async () => {
-  const response = await fetch(`${BASE_URL}/places`);
-  if (!response.ok) throw new Error(`Erreur HTTP : ${response.status}`);
-  return await response.json();
-};
-
-const loadFavoritesFromStorage = async () => {
-  const favData = await AsyncStorage.getItem('favorites');
-  return favData ? JSON.parse(favData) : [];
-};
+import RecommendedCard from '../components/RecommendedCard';
+import PlaceCard from '../components/PlaceCard';
+import { addFavorite, removeFavorite } from '../services/api';
+import { usePlaces } from '../hooks/usePlaces';
+import { useCallback } from 'react';
+import Toast from 'react-native-toast-message';
+const Tabs = ['Lieu', 'Hotel', 'Restaurant'];
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const scrollRef = useRef(null);
-  const { user } = useUser();
 
-  const [activeTab, setActiveTab] = useState('Tourism');
-  const [favorites, setFavorites] = useState([]);
-  const [searchPlaces, setSearchPlaces] = useState({ Tourism: '', Hotel: '', Restaurant: '' });
-  const [lieux, setLieux] = useState([]); 
-  const [loading, setLoading] = useState(true);
-  const Tabs = ['Tourism', 'Hotel', 'Restaurant'];
-  
-  useEffect(() => {
-    const initialize = async () => {
-      try {
-        const [favs, places] = await Promise.all([
-          loadFavoritesFromStorage(),
-          fetchPlacesFromApi(),
-        ]);
-        setFavorites(favs);
-        setLieux(places);
-      } catch (err) {
-        console.error('Erreur init:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    initialize();
-  }, []);
+  const [activeTab, setActiveTab] = useState('Lieu');
+  const [searchPlaces, setSearchPlaces] = useState({ Lieu: '', Hotel: '', Restaurant: '' });
+
+  const { popular, recommended, favorites, setFavorites, loading, places } = usePlaces();
 
  
-  const toggleFavorite = async (placeId) => {
-    if (!user) return;
-
-    const isFavorite = favorites.includes(placeId);
-    const newFavorites = isFavorite
-      ? favorites.filter((fav) => fav !== placeId)
-      : [...favorites, placeId];
-
-    setFavorites(newFavorites);
-    await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
-
-    const token = await AsyncStorage.getItem('token');
+    const toggleFavorite = async (placeId) => {
+    const isFav = favorites.includes(placeId);
     try {
-      await fetch(`${BASE_URL}/favorites/${placeId}`, {
-        method: isFavorite ? 'DELETE' : 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      if (isFav) {
+        await removeFavorite(placeId);
+        setFavorites(prev => prev.filter(id => id !== placeId));
+        Toast.show({
+          type: 'success',
+          text1: 'Favori supprimé',
+        });
+      } else {
+        await addFavorite(placeId);
+        setFavorites(prev => [...prev, placeId]);
+        Toast.show({
+          type: 'success',
+          text1: 'Favori ajouté',
+        });
+      }
     } catch (err) {
-      console.log('Erreur lors de la mise à jour du favori :', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Erreur',
+        text2: 'Impossible de modifier les favoris.',
+      });
+      console.error('Erreur toggleFavorite :', err.message);
     }
   };
 
+
+  
   const handleTabChange = (tab) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
@@ -94,23 +61,23 @@ const HomeScreen = () => {
     }
   };
 
+ const filterPlaces = useCallback((list, category, query) => {
+  return list.filter(place =>
+    place.name.toLowerCase().includes(query.toLowerCase()) &&
+    place.category?.toLowerCase() === category.toLowerCase()
+  );
+}, []);
   const filteredPlaces = useMemo(() => {
-    return lieux.filter((place) =>
-      place.name.toLowerCase().includes(searchPlaces[activeTab]?.toLowerCase()) &&
-      place.category?.toLowerCase() === activeTab.toLowerCase()
-    );
-  }, [lieux, searchPlaces, activeTab]);
+    return filterPlaces(popular, activeTab, searchPlaces[activeTab] || '');
+  }, [popular, searchPlaces, activeTab]);
 
-  const recommendedPlaces = [
-    {
-      title: 'Plage de Saïdia',
-      image: require('../../assets/images/plageSaidia.jpg'),
-    },
-    {
-      title: 'Marina Saïdia',
-      image: require('../../assets/images/marinaSaidia.jpg'),
-    },
-  ];
+  const filteredRecommended = useMemo(() => {
+    return filterPlaces(recommended, activeTab, searchPlaces[activeTab] || '');
+  }, [recommended, searchPlaces, activeTab]);
+
+  const extractKey = (item) => item.id.toString();
+
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -121,9 +88,13 @@ const HomeScreen = () => {
 
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#aaa" />
-          <TextInput placeholder="Rechercher" style={styles.searchInput} onChangeText={(text) =>
-                    setSearchPlaces((prev) => ({ ...prev, [activeTab]: text }))
-          }/>
+          <TextInput
+            placeholder="Rechercher"
+            style={styles.searchInput}
+            onChangeText={(text) =>
+              setSearchPlaces((prev) => ({ ...prev, [activeTab]: text }))
+            }
+          />
         </View>
 
         <View style={styles.tabs}>
@@ -136,69 +107,70 @@ const HomeScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Populaires</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('AllPlaces', { places: places, category: activeTab, initialFavorites: favorites, })}>
             <Text style={styles.seeAll}>Voir tout</Text>
           </TouchableOpacity>
         </View>
 
-              {loading ? (
-                <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
-               ) : (
-              <FlatList
-                ref={scrollRef}
-                data={filteredPlaces}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => {
-                  const isFavorite = favorites.includes(item.id);
-                  return (
-                    <TouchableOpacity
-                      style={styles.card}
-                      activeOpacity={0.8}
-                      onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
-                    >
-                      {/* <Image source={images[item.imageUrl]} style={styles.cardImage} /> */}
-                      <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
-                      <View style={styles.cardOverlay}>
-                        <Text style={styles.cardTitle}>{item.name}</Text>
-                        <View style={styles.rating}>
-                          <Ionicons name="star" size={18} color="gold" />
-                          <Text style={styles.ratingText}>{item.rating}</Text>
-                        </View>
-                        <MaterialIcons
-                          name={isFavorite ? 'favorite' : 'favorite-border'}
-                          size={30}
-                          color="white"
-                          style={styles.favoriteIcon}
-                          onPress={() => toggleFavorite(item.id)}
-                        />
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }}
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
+        ) : (
+          <FlatList
+            ref={scrollRef}
+            data={filteredPlaces}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={extractKey}
+            renderItem={({ item }) => {
+              const isFavorite = favorites.includes(item.id);
+              return (
+               <PlaceCard
+                place={item}
+                isFavorite={isFavorite}
+                onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
+                onToggleFavorite={() => toggleFavorite(item.id)}
               />
-              )}
-            
+              );
+            }}
+          />
+        )}
+        {!loading && filteredPlaces.length === 0 && (
+          <Text style={{ marginTop: 20, color: '#888', textAlign: 'center' }}>
+            Aucun lieu trouvé.
+          </Text>
+        )}
         <Text style={styles.sectionTitle}>Recommandés</Text>
-        <View style={styles.recommendedContainer}>
-          {recommendedPlaces.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.recommendedCard}
-              activeOpacity={0.8}
-            >
-              <Image source={item.image} style={styles.recommendedImage} />
-              <Text style={styles.recomendedTitle}>{item.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
+        ) : (
+        <FlatList
+          ref={scrollRef}
+          data={filteredRecommended}
+          keyExtractor={extractKey}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 10 }}
+          renderItem={({ item }) => (
+             <RecommendedCard
+              place={item}
+              onPress={() => navigation.navigate('DestinationDetail', { lieu: item })}
+            />
+          )}
+        />
+        )}
+        {!loading && filteredPlaces.length === 0 && (
+          <Text style={{ marginTop: 20, color: '#888', textAlign: 'center' }}>
+            Aucun lieu trouvé.
+          </Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 export default HomeScreen;
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -259,63 +231,13 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     color: Colors.primary,
-    fontFamily: fonts.medium,
-  },
-  card: {
-    width: 191,
-    height: 238,
-    borderRadius: 16,
-    marginRight: 15,
-    overflow: 'hidden',
-    position: 'relative',
-    marginBottom: 20,
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-  },
-  cardOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    padding: 10,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    width: '100%',
-  },
-  cardTitle: {
-    color: Colors.white,
     fontFamily: fonts.semibold,
   },
-  rating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  ratingText: {
-    color: Colors.primary,
-    marginLeft: 4,
-    fontFamily: fonts.semibold
-  },
-  favoriteIcon: {
-    position: 'absolute',
-    right: 5,
-    bottom: 12,
-  },
+
   recommendedContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
     marginBottom: 30,
-  },
-  recommendedCard: {
-    width: '48%',
-  },
-  recommendedImage: {
-    width: '100%',
-    height: 120,
-    borderRadius: 12,
-    marginBottom: 5,
-  },
-  recomendedTitle: {
-    fontFamily: fonts.medium,
   },
 });

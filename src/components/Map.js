@@ -6,9 +6,9 @@ export default function Map({ latitude, longitude, name, address }) {
   return (
     <View style={styles.mapContainer}>
       <MapView
-        provider={PROVIDER_GOOGLE} // rend la carte plus moderne (nécessite clé API Google Maps si tu veux plus de fonctionnalités)
+        provider={PROVIDER_GOOGLE} 
         style={styles.map}
-        customMapStyle={mapStyle} // un style de carte moderne
+        customMapStyle={mapStyle} 
         initialRegion={{
           latitude,
           longitude,
@@ -31,7 +31,7 @@ export default function Map({ latitude, longitude, name, address }) {
 
 const styles = StyleSheet.create({
   mapContainer: {
-    marginTop: 20,
+    marginTop: 10,
     borderRadius: 15,
     overflow: 'hidden',
     height: 250, // plus grand

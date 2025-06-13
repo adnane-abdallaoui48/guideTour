@@ -1,53 +1,41 @@
-import { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Animatable from "react-native-animatable";
+import { fonts } from '../../assets/styles/font';
 
 export default function Splash({ navigation }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current; // opacité de 0
-  const bounceAnim = useRef(new Animated.Value(0.5)).current; // scale 0.5
-
   useEffect(() => {
-    // Lancer l'animation au montage
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(bounceAnim, {
-        toValue: 1,
-        friction: 3,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     const checkToken = async () => {
       const token = await AsyncStorage.getItem("token");
       setTimeout(() => {
         if (token) {
           navigation.replace("MainTabs");
         } else {
-          navigation.replace("SignIn");
+          navigation.replace("WelcomeSc");
         }
       }, 3000);
     };
 
     checkToken();
-  }, [navigation, fadeAnim, bounceAnim]);
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
-      <Animated.Text
-        style={[
-          styles.title,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: bounceAnim }],
-          },
-        ]}
+      <Animatable.Image
+        animation="bounceIn"
+        duration={1500}
+        source={require('../../assets/logo.png')}
+        style={styles.cardImage}
+      />
+      <Animatable.Text
+        animation="fadeInUp"
+        delay={500}
+        duration={1500}
+        style={styles.title}
       >
-        Tjwall
-      </Animated.Text>
+        Mosafer
+      </Animatable.Text>
     </View>
   );
 }
@@ -57,12 +45,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFA500",
+    flexDirection: "row",
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 34,
-    fontWeight: "bold",
-    fontFamily: "Verdana",
-    color: "white",
+    color: "#F28B00",
+    fontFamily: fonts.semibold,
+    marginLeft: 10,
+    marginLeft: 0,
+
+  },
+  cardImage: {
+    width: 100,
+    height: 100,
+    marginRight: -17
   },
 });
