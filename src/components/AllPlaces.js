@@ -17,35 +17,42 @@ import Toast from 'react-native-toast-message';
 import Colors from '../constants/colors';
 import { fonts } from '../../assets/styles/font';
 import { addFavorite, removeFavorite } from '../services/api';
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const AllPlaces = () => {
   const route = useRoute();
   const navigation = useNavigation();
-
-  const { places = [], category = '', initialFavorites = [] } = route.params || {};
+  const insets = useSafeAreaInsets();
+  const { places = [], category = '', initialFavorites = [], updateFavorites } = route.params || {};
 
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState(initialFavorites);
   const [loadingFav, setLoadingFav] = useState(false);
 
   const filteredPlaces = useMemo(() => {
-    return places.filter(place =>
+  return places.filter(
+    (place) =>
+      place.category?.toLowerCase() === category.toLowerCase() &&
       place.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [places, search]);
+  );
+}, [places, search, category]);
+
 
   const toggleFavorite = async (placeId) => {
     setLoadingFav(true);
     const isFav = favorites.includes(placeId);
     try {
       if (isFav) {
-        await removeFavorite(placeId);
-        setFavorites(prev => prev.filter(id => id !== placeId));
-        Toast.show({ type: 'success', text1: 'Favori supprimé' });
-      } else {
-        await addFavorite(placeId);
-        setFavorites(prev => [...prev, placeId]);
-        Toast.show({ type: 'success', text1: 'Favori ajouté' });
+          await removeFavorite(placeId);
+          const newFavorites = favorites.filter(id => id !== placeId);
+          setFavorites(newFavorites);
+          updateFavorites && updateFavorites(newFavorites); 
+          Toast.show({ type: 'success', text1: 'Favori supprimé' });
+        } else {
+          await addFavorite(placeId);
+          const newFavorites = [...favorites, placeId];
+          setFavorites(newFavorites);
+          updateFavorites && updateFavorites(newFavorites); 
+          Toast.show({ type: 'success', text1: 'Favori ajouté' });
       }
     } catch (err) {
       Toast.show({
@@ -70,6 +77,13 @@ const AllPlaces = () => {
         <Image source={{ uri: item.imageUrl }} style={styles.image} />
         <View style={styles.info}>
           <Text style={styles.name}>{item.name || 'Sans nom'}</Text>
+          {item.averageRating !== null && item.averageRating !== undefined
+              ? 
+                  <View style={styles.rating}>
+                    <Ionicons name="star" size={18} color="gold" />
+                    <Text style={styles.ratingText}>{item.averageRating.toFixed(1)}</Text>
+                  </View>
+              :  <Text style={styles.ratingText}>N/A</Text>}
         </View>
 
         <TouchableOpacity
@@ -89,7 +103,7 @@ const AllPlaces = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { paddingBottom: insets.bottom}]} >
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -133,7 +147,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Colors.white,
-    paddingBottom: 20, 
   },
   header: {
     marginTop: 50,
@@ -150,6 +163,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: 25,
     marginLeft: 30,
+  },
+  rating: {
+    flexDirection: 'row',
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#555',
+    marginLeft: 5,
+    fontFamily: fonts.medium,
+
   },
   searchBar: {
     flexDirection: 'row',
@@ -173,17 +196,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   card: {
-    flexDirection: 'row',
     marginTop: 20,
     marginBottom: 15,
     backgroundColor: 'white',
     borderRadius: 15,
     overflow: 'hidden',
     elevation: 2,
-    paddingRight: 10,
   },
   image: {
-    width: 100,
+    width: '100%',
     height: 100,
   },
   info: {
@@ -202,10 +223,12 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   favoriteButton: {
-    padding: 8,
+    padding: 2,
     position : 'absolute',
-    bottom : 5,
-    right : 10
+    top : 8,
+    right : 8,
+    backgroundColor: '#fff',
+    borderRadius: 50,
   },
   emptyText: {
     marginTop: 50,

@@ -11,6 +11,7 @@ import DestinationDetail from './src/components/DestinationDetail';
 import ProfileDetailsScreen from './src/components/Profile/ProfileDetailsScreen';
 import WelcomeSc from './src/components/WelcomeSc';
 import AllPlaces from './src/components/AllPlaces';
+import SettingsScreen from './src/components/Profile/Cards/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
         <Stack.Screen name="WelcomeSc" component={WelcomeSc} />
         <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
         <Stack.Screen name="AllPlaces" component={AllPlaces} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>

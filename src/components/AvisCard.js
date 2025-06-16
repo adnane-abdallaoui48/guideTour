@@ -2,9 +2,8 @@ import { StyleSheet } from 'react-native';
 import { Text } from 'react-native';
 import { View } from 'react-native';
 import { fonts } from '../../assets/styles/font';
-import { Rating } from 'react-native-ratings';
 
-export default function AvisCard({ item, ratingUser }) {
+export default function AvisCard({ item }) {
   return (
     <View style={styles.reviewCard}>
       <View style={styles.reviewHeader}>
@@ -15,17 +14,6 @@ export default function AvisCard({ item, ratingUser }) {
         </View>
         <View style={styles.reviewInfo}>
           <Text style={styles.username}>{item.user.username}</Text>
-          <View style={styles.rating}>
-            <Rating
-                type="star"
-                ratingCount={5}
-                imageSize={20}
-                readonly
-                startingValue={ratingUser || 0}
-                fractions={1}
-              />
-              
-          </View>
         </View>
         <Text style={styles.date}>
           {new Date(item.createdAt).toLocaleDateString()}
@@ -81,7 +69,6 @@ const styles = StyleSheet.create({
   reviewContent: {
     fontSize: 14,
     color: '#333',
-    marginTop: 4,
     fontFamily: fonts.regular,
     marginLeft: 45,
   },

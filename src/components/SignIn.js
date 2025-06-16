@@ -1,78 +1,84 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView} from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";  
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fonts } from '../../assets/styles/font';
 import Colors from './../constants/colors';
-import { BASE_URL } from '../../config';
+import { signIn } from "../services/api";
+
+// import * as Google from 'expo-auth-session/providers/google';
+// import * as WebBrowser from 'expo-web-browser';
+// import { useEffect } from 'react';
+// import Constants from 'expo-constants';
+// import { signInWithGoogleBackend } from '../services/api';
+
+// WebBrowser.maybeCompleteAuthSession();
 
 export default function SignIn({ navigation }) {
-  const [passwordVisible, setPasswordVisible] = useState(false);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [errors, setErrors] = useState([]);
 
+//   const [request, response, promptAsync] = Google.useAuthRequest({
+//   expoClientId: '1070531194737-kdp298j2571ppm4su3i6ke2jngbmsdh9.apps.googleusercontent.com',
+//   webClientId: '1070531194737-kdp298j2571ppm4su3i6ke2jngbmsdh9.apps.googleusercontent.com', 
+// });
 
-  // Gérer la connexion Google
-  const handleLogin = async () => { 
-  setErrors([]);
+// useEffect(() => {
+//   if (response?.type === 'success') {
+//     const { authentication } = response;
 
-  if (!email || !password) {
-    setErrors(["Veuillez remplir tous les champs."]);
-    return;
-  }
+//     signInWithGoogleBackend(authentication.idToken)
+//       .then(async (data) => {
+//         await AsyncStorage.setItem('token', data.token);
+//         navigation.navigate('MainTabs');
+//       })
+//       .catch(err => {
+//         console.error("Erreur backend Google :", err);
+//         setErrors(["Erreur lors de la connexion Google"]);
+//       });
+//   }
+// }, [response]);
+  const resetFields = () => {
+    setEmail("");
+    setPassword("");
+  };
 
-  try {
-    const response = await fetch(`${BASE_URL}/users/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username: email, password }), // ← ici
-    });
+  const showError = (message) => {
+    setErrors([message]);
+  };
 
-    const data = await response.json();
+  const handleLogin = async () => {
+    setErrors([]);
 
-    if (response.ok) {
-      const { token } = data;
-      await AsyncStorage.setItem("token", token);
-      
-      navigation.navigate('MainTabs', { screen: 'Accueil' });
-      
-    } else {
-      setErrors(["Email ou mot de passe incorrect"]);
+    if (!email.trim() || !password) {
+      return showError("Veuillez remplir tous les champs.");
     }
-  } catch (error) {
-    console.error("Erreur lors de la connexion :", error);
-    setErrors(["Impossible de contacter le serveur"]);
-  }
-};
 
-  /*
-  const handleGoogleLoginSuccess = async (idToken) => {
     try {
-      const response = await fetch("https://ton-backend.com/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
+      const data = await signIn(email.trim(), password);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        const { token } = data;
-        await AsyncStorage.setItem("token", token);
+      if (data?.token) {
+        await AsyncStorage.setItem("token", data.token);
+        resetFields();
         navigation.navigate('MainTabs', { screen: 'Accueil' });
       } else {
-        setErrors(["Échec de la connexion Google"]);
+        showError("Email ou mot de passe incorrect.");
       }
     } catch (error) {
-      console.error("Erreur lors de la connexion Google :", error);
-      setErrors(["Impossible de contacter le serveur"]);
+      console.error("Erreur de connexion :", error);
+      showError("Erreur serveur. Veuillez réessayer plus tard.");
     }
   };
-*/
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Connectez-vous</Text>
@@ -85,29 +91,32 @@ export default function SignIn({ navigation }) {
           ))}
         </View>
       )}
-      
-      
-      <TextInput 
-        style={styles.input} 
-        placeholder="Email" 
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
         keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
         value={email}
         onChangeText={setEmail}
+        returnKeyType="next"
       />
 
       <View style={styles.passwordContainer}>
-        <TextInput 
+        <TextInput
           style={styles.passwordInput}
           placeholder="Mot de passe"
           secureTextEntry={!passwordVisible}
           value={password}
           onChangeText={setPassword}
+          returnKeyType="done"
         />
         <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-          <Ionicons 
-            name={passwordVisible ? "eye-off" : "eye"} 
-            size={20} 
-            color="gray" 
+          <Ionicons
+            name={passwordVisible ? "eye-off" : "eye"}
+            size={20}
+            color="gray"
           />
         </TouchableOpacity>
       </View>
@@ -121,20 +130,23 @@ export default function SignIn({ navigation }) {
       </TouchableOpacity>
 
       <Text style={styles.signUpText}>
-        Vous n’avez pas de compte ? <Text style={styles.signUpLink} onPress={() => navigation.navigate("SignUp")}>Inscrivez-vous</Text>
+        Vous n'avez pas de compte ?{" "}
+        <Text style={styles.signUpLink} onPress={() => navigation.navigate("SignUp")}>
+          Inscrivez-vous
+        </Text>
       </Text>
 
       <Text style={styles.orText}>Ou connectez-vous avec</Text>
 
-      <TouchableOpacity style={styles.socialIcons}>
+     <TouchableOpacity onPress={() => promptAsync()} style={styles.socialIcons}>
         <FontAwesome name="google" size={24} color="#FFA500" />
         <Text style={styles.textGoogle}>Continuer avec Google</Text>
-      </TouchableOpacity>
+     </TouchableOpacity>
 
-      {/* <GoogleSignInButton onGoogleLoginSuccess={handleGoogleLoginSuccess} /> */}
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

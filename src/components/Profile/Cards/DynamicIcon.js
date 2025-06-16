@@ -1,4 +1,3 @@
-import React from 'react'
 import {FontAwesome5, Ionicons, MaterialIcons, AntDesign } from '@expo/vector-icons';
 
 

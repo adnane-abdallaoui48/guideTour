@@ -13,7 +13,8 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { fonts } from '../../assets/styles/font';
 import colors from '../constants/colors';
-import { fetchFavorites } from '../services/api';
+import { clearFavorites, fetchFavorites } from '../services/api';
+import Toast from 'react-native-toast-message';
 
 export default function FavorisScreen() {
   const navigation = useNavigation();
@@ -39,12 +40,13 @@ export default function FavorisScreen() {
   }
 }, [firstLoad]);
 
-  // Recharger quand on entre dans l'écran
   useFocusEffect(
     useCallback(() => {
       fetchFavoritesFromApi();
     }, [fetchFavoritesFromApi])
   );
+
+
 
   const renderItem = useCallback(({ item }) => (
     <TouchableOpacity
@@ -53,9 +55,9 @@ export default function FavorisScreen() {
     >
       <Image source={{uri : item.place.imageUrl}} style={styles.image} />
       <View style={styles.info}>
-        <Text style={styles.name}>{item.place?.name || 'Sans nom'}</Text>
-        <Text numberOfLines={2} style={styles.description}>
-          {item.place?.description || 'Pas de description'}</Text>
+        <Text style={styles.name} numberOfLines={1}>{item.place?.name || 'Sans nom'}</Text>
+        {/* <Text numberOfLines={1} style={styles.description}>
+          {item.place?.description || 'Pas de description'}</Text> */}
       </View>
     </TouchableOpacity>
   ), [navigation]);
@@ -68,6 +70,8 @@ export default function FavorisScreen() {
         </TouchableOpacity>
         <Text style={styles.favTitle}>Mes favoris</Text>
       </View>
+
+       
 
       <View style={styles.container}>
         {firstLoad && loading ? (
@@ -114,8 +118,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   card: {
-    flexDirection: 'row',
-    marginTop: 20,
+    marginTop : 20,
     marginBottom: 15,
     backgroundColor: 'white',
     borderRadius: 15,
@@ -123,7 +126,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   image: {
-    width: 100,
+    width: '100%',
     height: 100,
   },
   info: {
@@ -132,7 +135,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   name: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: fonts.semibold,
     marginBottom: 6,
     color: '#222',
@@ -152,4 +155,6 @@ const styles = StyleSheet.create({
   loader: {
     marginTop: 20,
   },
+
+
 });

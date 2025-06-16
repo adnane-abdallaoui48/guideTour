@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Modal, Pressable, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../useUser';
@@ -6,13 +6,24 @@ import Cards from './Cards/Cards';
 import colors from '../../constants/colors';
 import { fonts } from '../../../assets/styles/font';
 import { handleLogout } from '../LogOut';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user, loading } = useUser();
   const [modalVisible, setModalVisible] = useState(false);
   const [notifStatus, setNotifStatus] = useState('Allow');
+  const [imageUri, setImageUri] = useState(null);
 
+  useEffect (() => {
+    const loadImage = async () => {
+      if (user) {
+        const uri = await AsyncStorage.getItem(`profileImageUri_${user.id}`);
+        if (uri) setImageUri(uri);
+      }
+    };
+    loadImage();
+  }, [user]);
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -24,7 +35,10 @@ const ProfileScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.compteContainer}>
-        <Image source={require('../../../assets/adnane.png')} style={styles.compteImage} />
+         <Image
+          source={imageUri ? { uri: imageUri } : require('../../../assets/adnane1.png')}
+          style={styles.compteImage}
+        />
         <View>
           {user && (
             <>
@@ -42,7 +56,7 @@ const ProfileScreen = () => {
           name="Profil"
           onPress={() => navigation.navigate('ProfileDetails', { user })}
         />
-        <Cards iconLibrary="Ionicons" iconName="settings-outline" name="Paramètres" />
+        <Cards iconLibrary="Ionicons" iconName="settings-outline" name="Paramètres" onPress={() => navigation.navigate('Settings',)}/>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Cards iconLibrary="Ionicons" iconName="notifications-outline" name={`Notification (${notifStatus})`} />
         </TouchableOpacity>

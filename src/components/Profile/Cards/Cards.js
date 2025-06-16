@@ -1,5 +1,4 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import React from 'react'
 import DynamicIcon from './DynamicIcon'
 import { fonts } from '../../../../assets/styles/font'
 export default function Cards({name, iconName, iconLibrary, onPress}) {

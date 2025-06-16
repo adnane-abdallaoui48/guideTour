@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo} from 'react';
 import { Text, View, StyleSheet, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons} from '@expo/vector-icons';
@@ -16,14 +16,16 @@ const Tabs = ['Lieu', 'Hotel', 'Restaurant'];
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const scrollRef = useRef(null);
+  const popularListRef = useRef(null);
+  const recommendedListRef = useRef(null);
+
 
   const [activeTab, setActiveTab] = useState('Lieu');
   const [searchPlaces, setSearchPlaces] = useState({ Lieu: '', Hotel: '', Restaurant: '' });
 
   const { popular, recommended, favorites, setFavorites, loading, places } = usePlaces();
 
- 
+    
     const toggleFavorite = async (placeId) => {
     const isFav = favorites.includes(placeId);
     try {
@@ -57,7 +59,8 @@ const HomeScreen = () => {
   const handleTabChange = (tab) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
-      scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
+      popularListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      recommendedListRef.current?.scrollToOffset({ offset: 0, animated: true });
     }
   };
 
@@ -107,7 +110,7 @@ const HomeScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Populaires</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('AllPlaces', { places: places, category: activeTab, initialFavorites: favorites, })}>
+          <TouchableOpacity onPress={() => navigation.navigate('AllPlaces', { places: places, category: activeTab, initialFavorites: favorites, updateFavorites: setFavorites, })}>
             <Text style={styles.seeAll}>Voir tout</Text>
           </TouchableOpacity>
         </View>
@@ -116,7 +119,7 @@ const HomeScreen = () => {
           <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
         ) : (
           <FlatList
-            ref={scrollRef}
+            ref={popularListRef}
             data={filteredPlaces}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -144,7 +147,7 @@ const HomeScreen = () => {
           <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 20 }} />
         ) : (
         <FlatList
-          ref={scrollRef}
+          ref={recommendedListRef}
           data={filteredRecommended}
           keyExtractor={extractKey}
           horizontal
@@ -207,17 +210,24 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    marginBottom: 10,
+    marginBottom: 20
   },
   tab: {
     marginRight: 20,
     fontSize: 16,
     fontFamily: fonts.regular,
-    color: Colors.secondary,
+    color: '#717883',
+    backgroundColor : '#E5E7EB',
+    borderRadius: 17,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
   },
   activeTab: {
-    color: Colors.primary,
+    color: Colors.white,
     fontFamily: fonts.bold,
+    backgroundColor : Colors.primary,
+    borderRadius: 17,
+    paddingHorizontal: 15,
   },
   section: {
     flexDirection: 'row',

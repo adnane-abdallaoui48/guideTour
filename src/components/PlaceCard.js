@@ -10,19 +10,24 @@ const PlaceCard = React.memo(({ place, isFavorite, onPress, onToggleFavorite }) 
       <Image source={{ uri: place.imageUrl }} style={styles.cardImage} />
       <View style={styles.favoriteIcon}>
         <MaterialIcons
-          name={isFavorite ? 'favorite' : 'favorite-border'}
+          name={isFavorite ? 'favorite' : 'favorite-outline'}
           size={28}
-          color={Colors.primary}
           onPress={onToggleFavorite}
+          color={isFavorite ? Colors.primary : '#888'}
         />
       </View>
       <View style={styles.cardOverlay}>
         <Text style={styles.cardTitle} numberOfLines={1}>{place.name}</Text>
-        <View style={styles.rating}>
-          <Ionicons name="star" size={18} color="gold" />
-          <Text style={styles.ratingText}>{place.rating}</Text>
+        
+            {place.averageRating !== null && place.averageRating !== undefined
+              ? 
+                  <View style={styles.rating}>
+                    <Ionicons name="star" size={18} color="gold" />
+                    <Text style={styles.ratingText}>{place.averageRating.toFixed(1)}</Text>
+                  </View>
+              :  <Text style={styles.ratingText}>N/A</Text>}
         </View>
-      </View>
+
     </TouchableOpacity>
   );
 });
@@ -54,13 +59,12 @@ const styles = StyleSheet.create({
   },
   rating: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
   },
   ratingText: {
-    color: Colors.primary,
-    marginLeft: 4,
-    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: Colors.white,
+    marginLeft: 5,
+    fontFamily: fonts.medium,
   },
   favoriteIcon: {
     position: 'absolute',

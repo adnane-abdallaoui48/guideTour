@@ -29,42 +29,7 @@ export default function DestinationDetail({ route }) {
   const [reviewRating, setReviewRating] = useState(0);
   const [averageRating, setAverageRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [ratingUserPlace, setRatingUserPlace] = useState(0);
  
-
-
-useEffect(() => {
-  const fetchRatingData = async () => {
-    try {
-      const avgRes = await getAverageRatingByPlace(lieu.id);
-      setAverageRating(avgRes.data ? avgRes.data.toFixed(1) : null);
-
-      try {
-        const userRes = await getRatingByUserAndPlace(lieu.id);
-        if (userRes.data && userRes.data.value !== undefined) {
-          setRatingUserPlace(userRes.data.value);
-        } else {
-          setRatingUserPlace(0);
-        }
-      } catch (err) {
-        if (err.response?.status === 404) {
-          setRatingUserPlace(0);
-        } else {
-          console.error('Erreur en récupérant la note utilisateur:', err.message);
-        }
-      }
-
-    } catch (error) {
-      console.error('Erreur de récupération des notes :', error.message);
-      setAverageRating(null);
-      setRatingUserPlace(0);
-    }
-  };
-
-  fetchRatingData();
-}, [lieu.id]);
-
-
 
 
   useEffect(() => {
@@ -132,13 +97,7 @@ useEffect(() => {
 
     const res = await getAverageRatingByPlace(lieu.id);
     setAverageRating(parseFloat(res.data.toFixed(1))); 
-    const res1 = await getRatingByUserAndPlace(lieu.id);
-    if (res1.data && res1.data.value !== undefined) {
-      setRatingUserPlace(res1.data.value);
-    } else {
-      setRatingUserPlace(0);
-    }
-
+    
     Toast.show({
       type: 'success',
       text1: 'Merci pour votre avis !',
@@ -157,7 +116,7 @@ useEffect(() => {
 };
 
 
-  const renderAvis = ({ item }) => <AvisCard item={item} ratingUser={ratingUserPlace || null}/>;
+  const renderAvis = ({ item }) => <AvisCard item={item}/>;
 
   return (
     
@@ -172,15 +131,13 @@ useEffect(() => {
       <ScrollView style={styles.data} showsVerticalScrollIndicator={false} >
         <View style={styles.titleRating}>
           <Text style={styles.titleName}>{lieu.name}</Text>
-
-          {averageRating !== null && (
-          <View style={styles.rating}>
-            <Ionicons name="star" size={20} color="gold" />
-            <Text style={{ marginLeft: 5, fontFamily: fonts.medium, marginTop: 4 }}>
-              {averageRating}
-            </Text>
-          </View>
-          )}
+          {lieu.averageRating !== null && lieu.averageRating !== undefined
+              ? 
+                  <View style={styles.rating}>
+                    <Ionicons name="star" size={18} color="gold" />
+                    <Text style={styles.ratingText}>{lieu.averageRating.toFixed(1)}</Text>
+                  </View>
+              :  <Text style={styles.ratingText}>N/A</Text>}
         </View>         
 
         <View style={styles.province}>
@@ -259,7 +216,7 @@ useEffect(() => {
               ratingCount={5}
               imageSize={25}
               fractions={0} 
-              startingValue={1}
+              startingValue={0}
               onFinishRating={(rating) => setReviewRating(Math.round(rating))}
             />
             <View style={styles.modalActions}>
@@ -340,7 +297,12 @@ const styles = StyleSheet.create({
   },
   rating: {
     flexDirection: 'row',
-    alignItems : 'center',
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#555',
+    marginLeft: 5,
+    fontFamily: fonts.medium,
   },
 
   Note : {

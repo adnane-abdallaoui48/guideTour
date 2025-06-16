@@ -6,6 +6,7 @@ import Colors from "./../constants/colors"
 import { fonts } from '../../assets/styles/font';
 import FavorisScreen from './FavorisScreen';
 import { TouchableOpacity } from 'react-native';
+import EventScreen from './EventScreen';
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
@@ -22,6 +23,7 @@ export default function MainTabs() {
           let iconName;
           if (route.name === 'Accueil') iconName = 'home-outline';
           else if (route.name === 'Favoris') iconName = 'heart-outline';
+          else if (route.name === 'Événements') iconName = 'calendar-outline';
           else if (route.name === 'Profil') iconName = 'person-outline';
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -37,6 +39,7 @@ export default function MainTabs() {
     >
       <Tab.Screen name="Accueil" component={HomeScreen} />
       <Tab.Screen name="Favoris" component={FavorisScreen} />
+      <Tab.Screen name="Événements" component={EventScreen} />
       <Tab.Screen name="Profil" component={ProfileScreen} />
     </Tab.Navigator>
   );

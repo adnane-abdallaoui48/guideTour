@@ -34,3 +34,29 @@ export const getAverageRatingByPlace = async (placeId) =>
 
 export const getRatingByUserAndPlace = async (placeId) =>
   axios.get(`${BASE_URL}/ratings/place/${placeId}/user`, await getAuthHeaders())
+
+export const getAllEvents = async () => axios.get(`${BASE_URL}/events`, await getAuthHeaders());
+
+export const clearFavorites = async () =>
+  axios.delete(`${BASE_URL}/favorites/clear`, await getAuthHeaders());
+
+export const signIn = async (username, password) => {
+  const response = await axios.post(`${BASE_URL}/users/login`, {
+    username,
+    password,
+  });
+  return response.data;
+}
+
+export const signUp = async (userData) => {
+  const response = await axios.post(`${BASE_URL}/users/register`, userData);
+  return response.data;
+}
+
+export const signInWithGoogleBackend = async (idToken) => {
+  const response = await axios.post(`${BASE_URL}/auth/google`, {
+    token: idToken,
+  });
+
+  return response.data; 
+};

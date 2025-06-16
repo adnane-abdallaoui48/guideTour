@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
@@ -7,12 +7,15 @@ import { BASE_URL } from '../../../config';
 import { fonts } from '../../../assets/styles/font';
 import Colors from '../../constants/colors';
 import Toast from 'react-native-toast-message';
+import * as ImagePicker from 'expo-image-picker';
 
 const ProfileDetailsScreen = ({ route, navigation }) => {
   const { user } = route.params;
   const [lastName, setLastName] = useState(user.lastName || '');
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [email, setEmail] = useState(user.email || '');
+  const [imageUri, setImageUri] = useState(null);
+
 
   const isModified = firstName !== user.firstName || lastName !== user.lastName || email !== user.email;
 
@@ -42,7 +45,6 @@ const ProfileDetailsScreen = ({ route, navigation }) => {
       lastName,
       email,
       username: user.username,
-      password: user.password || '', 
     };
 
     const token = await AsyncStorage.getItem('token');
@@ -90,6 +92,39 @@ const ProfileDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  useEffect(() => {
+    const loadImage = async () => {
+      const uri = await AsyncStorage.getItem(`profileImageUri_${user.id}`);
+      if (uri) {
+        setImageUri(uri);
+      }
+    };
+    loadImage();
+  }, [user.id]);
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      alert("Permission d'accéder à la galerie refusée !");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      const selectedUri = result.assets[0].uri;
+      setImageUri(selectedUri);
+      await AsyncStorage.setItem(`profileImageUri_${user.id}`, selectedUri);
+    }
+  };
+
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -97,11 +132,16 @@ const ProfileDetailsScreen = ({ route, navigation }) => {
       </TouchableOpacity>
 
       <View style={styles.header}>
-        <View style={styles.avatarWrapper}>
-          <Image source={require('../../../assets/adnane.png')} style={styles.avatar} />
-          <TouchableOpacity style={styles.editIcon}>
+        <View style={styles.avatarContainer}>
+          <Image
+            source={imageUri ? { uri: imageUri } : require('../../../assets/adnane1.png')}
+            style={styles.avatar}
+          />
+
+          <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
             <EvilIcons name="pencil" size={16} color="white" />
           </TouchableOpacity>
+
         </View>
         <View>
           <Text style={styles.name}>{user.username}</Text>

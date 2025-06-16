@@ -9,7 +9,7 @@ import { fonts } from '../../assets/styles/font';
 import Colors from './../constants/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BASE_URL } from '../../config';
-
+import { signUp } from '../services/api'; 
 const SignUp = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
@@ -56,15 +56,10 @@ const SignUp = ({ navigation }) => {
   
     const { confirmPassword, ...userData } = form;
     setIsLoading(true);
+    
     try {
-      const response = await fetch(`${BASE_URL}/users/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-  
-      const data = await response.json();
-      if (response.ok) {
+      const data = await signUp(userData);
+      if (data.token) {
         const { token } = data;
         await AsyncStorage.setItem("token", token);
         Toast.show({
